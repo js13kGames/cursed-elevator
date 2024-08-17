@@ -15,4 +15,8 @@ Theme: **Triskaidekaphobia**
 
 * [Escape] to pause/unpause
 
-GAMEPAD is also supported.
+
+## Resources
+
+* [W - A micro WebGL2 framework](https://xem.github.io/W/)
+* [ZzFX - Zuper Zmall Zound Zynth](https://github.com/KilledByAPixel/ZzFX)
