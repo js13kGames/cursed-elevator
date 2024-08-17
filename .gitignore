@@ -1,0 +1,10 @@
+# Directories
+/build/
+/ignore/
+/node_modules/
+
+# Files
+/dev/js/lib/w.js
+IDEAS.md
+package-lock.json
+TODO.md

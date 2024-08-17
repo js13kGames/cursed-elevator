@@ -1,0 +1,14 @@
+{
+  "name": "js13k-2024",
+  "version": "1.0.0",
+  "description": "js13k 2024",
+  "main": "dev/index-dev.html",
+  "author": "Sebastian Dorn",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@stylistic/eslint-plugin-js": "^2.6.4",
+    "globals": "^15.9.0"
+  }
+}
