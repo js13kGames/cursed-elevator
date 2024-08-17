@@ -370,7 +370,10 @@ js13k.Input = {
 		const camSpeed = 0.5;
 
 		document.body.onmousedown = ev => {
-			// TODO: check mouse button
+			if( ev.button !== 0 ) {
+				return;
+			}
+
 			isMovingCam = true;
 
 			mouseLastX = ev.clientX;
@@ -389,7 +392,7 @@ js13k.Input = {
 			this.camera.rx -= ( ev.clientY - mouseLastY ) * camSpeed;
 			this.camera.ry -= ( ev.clientX - mouseLastX ) * camSpeed;
 
-			this.camera.rx = this.camera.rx % 360;
+			this.camera.rx = Math.min( 80, Math.max( -50, this.camera.rx ) );
 			this.camera.ry = this.camera.ry % 360;
 
 			W.camera( this.camera );

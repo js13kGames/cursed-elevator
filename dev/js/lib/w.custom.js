@@ -289,7 +289,7 @@ W = {
 		// If the camera is in a group
 		if( W.next?.camera?.g ) {
 			// premultiply the camera matrix by the group's model matrix.
-			v.preMultiplySelf( W.next[W.next.camera.g].M || W.next[W.next.camera.g].m );
+			v.preMultiplySelf( W.next[W.next.camera.g].m );
 		}
 
 		// Send it to the shaders as the Eye matrix
@@ -386,21 +386,21 @@ W = {
 		// If the object is in a group:
 		if( W.next[object.g] ) {
 			// premultiply the model matrix by the group's model matrix.
-			W.next[object.n].m.preMultiplySelf( W.next[object.g].M || W.next[object.g].m );
+			W.next[object.n].m.preMultiplySelf( W.next[object.g].m );
 		}
 
 		// send the model matrix to the vertex shader
 		W.gl.uniformMatrix4fv(
 			W.gl.getUniformLocation( W.program, 'm' ),
 			false,
-			( W.next[object.n].M || W.next[object.n].m ).toFloat32Array()
+			W.next[object.n].m.toFloat32Array()
 		);
 
 		// send the inverse of the model matrix to the vertex shader
 		W.gl.uniformMatrix4fv(
 			W.gl.getUniformLocation( W.program, 'im' ),
 			false,
-			( new DOMMatrix( W.next[object.n].M || W.next[object.n].m ) ).invertSelf().toFloat32Array()
+			DOMMatrix.fromMatrix( W.next[object.n].m ).invertSelf().toFloat32Array()
 		);
 
 		// Don't render invisible items (camera, light, groups, camera's parent)

@@ -51,7 +51,7 @@ js13k.Renderer = {
 
 			W.reset( this.cnv );
 			W.clearColor( '000' );
-			W.ambient( 0.4 );
+			W.ambient( 0.2 );
 
 			this.registerEvents();
 
