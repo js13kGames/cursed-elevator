@@ -9,22 +9,15 @@ js13k.Input = {
 
 	ACTION: {
 		PAUSE: 1,
-		DO: 2,
+		INTERACT: 2,
 		CANCEL: 3,
-		ATTACK: 4,
-		INTERACT: 5,
-		DODGE: 6,
 
 		LEFT: 10,
 		UP: 11,
 		RIGHT: 12,
 		DOWN: 13,
-
-		SELECT_NEXT: 14,
-		SELECT_PREV: 15,
 	},
 
-	_gpButtons: {},
 	_ignoreUntilReleased: {},
 	_on: {
 		'gp_connect': [],
@@ -35,7 +28,6 @@ js13k.Input = {
 
 	gamepads: {},
 	keystate: {},
-	numGamepads: 0,
 
 	camera: {
 		rx: 0,
@@ -70,21 +62,9 @@ js13k.Input = {
 				keyboard: ['ArrowRight', 'KeyD'],
 				gamepad: [15]
 			},
-			[this.ACTION.ATTACK]: {
-				keyboard: ['Space', 'Enter'],
-				gamepad: [0, 2] // X, Square?
-			},
-			[this.ACTION.DODGE]: {
-				keyboard: ['ShiftLeft', 'ShiftRight'],
-				gamepad: [4, 5] // R1, R2
-			},
-			[this.ACTION.DO]: {
-				keyboard: ['Space', 'Enter'],
-				gamepad: [0, 2] // X, Square?
-			},
 			[this.ACTION.INTERACT]: {
-				keyboard: ['KeyE', 'CtrlLeft'],
-				gamepad: [1, 3] // Triangle, Circle?
+				keyboard: ['E', 'Space', 'Enter'],
+				gamepad: [0, 2] // X, Square?
 			},
 		};
 	},
@@ -370,7 +350,7 @@ js13k.Input = {
 		const camSpeed = 0.5;
 
 		document.body.onmousedown = ev => {
-			if( ev.button !== 0 ) {
+			if( ev.button !== 0 || !js13k.Renderer.level ) {
 				return;
 			}
 
@@ -385,7 +365,7 @@ js13k.Input = {
 		};
 
 		document.body.onmousemove = ev => {
-			if( !isMovingCam ) {
+			if( !isMovingCam || !js13k.Renderer.level ) {
 				return;
 			}
 
@@ -426,14 +406,12 @@ js13k.Input = {
 		};
 
 		window.addEventListener( 'gamepadconnected', ev => {
-			this.numGamepads++;
 			this.gamepads[ev.gamepad.index] = ev.gamepad;
 
 			this._on['gp_connect'].forEach( cb => cb() );
 		} );
 
 		window.addEventListener( 'gamepaddisconnected', ev => {
-			this.numGamepads--;
 			delete this.gamepads[ev.gamepad.index];
 
 			this._on['gp_disconnect'].forEach( cb => cb() );
