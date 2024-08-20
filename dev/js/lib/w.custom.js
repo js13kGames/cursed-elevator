@@ -330,7 +330,7 @@ W = {
 		}
 
 		// Order transparent objects from back to front
-		transparent.sort( (a, b) => {
+		transparent.sort( ( a, b ) => {
 			// Return a value > 0 if b is closer to the camera than a
 			// Return a value < 0 if a is closer to the camera than b
 			return W.dist( b ) - W.dist( a );
@@ -364,7 +364,7 @@ W = {
 	},
 
 	// Render an object
-	render: ( object, dt, just_compute = [ 'camera', 'light', 'group' ].includes( object.type ), buffer ) => {
+	render: ( object, dt, just_compute = ['camera', 'light', 'group'].includes( object.type ), buffer ) => {
 		// If the object has a texture
 		if( object.t ) {
 			// Set the texture's target (2D or cubemap)

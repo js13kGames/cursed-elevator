@@ -10,6 +10,131 @@ js13k.Renderer = {
 	timer: 0,
 
 
+	/**
+	 *
+	 * @returns {object}
+	 */
+	checkSelectables() {
+		let hits = [];
+
+		const cam = W.next.camera;
+		const ray = {
+			origin: [cam.x, cam.y, cam.z],
+			dir: [
+				// TODO: rx/ry/rz are rotation values in degree, but I need a normalized 3D vector
+			],
+		};
+
+		for( const name in W.next ) {
+			if( !name.startsWith( 's_' ) ) {
+				continue;
+			}
+
+			const o = W.next[name];
+			const hitPoint = this.rayHitsObject( ray, o );
+
+			if( hitPoint ) {
+				hits.push( [o, hitPoint] );
+			}
+		}
+
+		// TODO: return closest to camera
+
+		return hits;
+	},
+
+
+	/**
+	 * "Fast Ray-Box Intersection" by Andrew Woo.
+	 * From "Graphics Gems", Academic Press, 1990
+	 * @param {object}   ray
+	 * @param {number[]} ray.origin
+	 * @param {number[]} ray.dir
+	 * @param {object}   o
+	 * @returns {number[]?}
+	 */
+	rayHitsObject( ray, o ) {
+		const RIGHT = 0;
+		const LEFT = 1;
+		const MIDDLE = 2;
+
+		const minB = [o.x, o.y, o.z];
+		const maxB = [
+			o.x + o.w,
+			o.y + o.h,
+			o.z + o.d,
+		];
+
+		let inside = true;
+		let quadrant = [];
+		let maxT = [];
+		let candidatePlane = [];
+		let coord = [];
+
+		/* Find candidate planes; this loop can be avoided if
+		rays cast all from the eye(assume perpsective view) */
+		for( let i = 0; i < 3; i++ ) {
+			if( ray.origin[i] < minB[i] ) {
+				quadrant[i] = LEFT;
+				candidatePlane[i] = minB[i];
+				inside = false;
+			}
+			else if( ray.origin[i] > maxB[i] ) {
+				quadrant[i] = RIGHT;
+				candidatePlane[i] = maxB[i];
+				inside = false;
+			}
+			else {
+				quadrant[i] = MIDDLE;
+			}
+		}
+
+		/* Ray origin inside bounding box */
+		if( inside )	{
+			return ray.origin;
+		}
+
+		/* Calculate T distances to candidate planes */
+		for( let i = 0; i < 3; i++ ) {
+			if( quadrant[i] != MIDDLE && ray.dir[i] != 0 ) {
+				maxT[i] = ( candidatePlane[i] - ray.origin[i] ) / ray.dir[i];
+			}
+			else {
+				maxT[i] = -1;
+			}
+		}
+
+		/* Get largest of the maxT's for final choice of intersection */
+		let whichPlane = 0;
+
+		for( let i = 1; i < 3; i++ ) {
+			if( maxT[whichPlane] < maxT[i] ) {
+				whichPlane = i;
+			}
+		}
+
+		/* Check final candidate actually inside box */
+		if( maxT[whichPlane] < 0 ) {
+			return null;
+		}
+
+		for( let i = 0; i < 3; i++ ) {
+			if( whichPlane != i ) {
+				coord[i] = ray.origin[i] + maxT[whichPlane] * ray.dir[i];
+
+				if( coord[i] < minB[i] || coord[i] > maxB[i] ) {
+					return null;
+				}
+			}
+			else {
+				coord[i] = candidatePlane[i];
+			}
+		}
+
+		return coord;
+	},
+
+
 	drawPause() {
 		// TODO:
 	},

@@ -372,7 +372,7 @@ js13k.Input = {
 			this.camera.rx -= ( ev.clientY - mouseLastY ) * camSpeed;
 			this.camera.ry -= ( ev.clientX - mouseLastX ) * camSpeed;
 
-			this.camera.rx = Math.min( 80, Math.max( -50, this.camera.rx ) );
+			this.camera.rx = Math.min( 80, Math.max( -60, this.camera.rx ) );
 			this.camera.ry = this.camera.ry % 360;
 
 			W.camera( this.camera );

@@ -35,7 +35,6 @@ terser \
 	'Renderer.js' \
 	'Level.js' \
 	'Timer.js' \
-	'Vector2D.js' \
 	--ecma 12 --warn \
 	--compress --toplevel \
 	--mangle --mangle-props keep_quoted \
