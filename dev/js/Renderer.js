@@ -7,6 +7,7 @@
 js13k.Renderer = {
 
 
+	defaultCamDir: new DOMPoint( 0, 0, -1 ),
 	timer: 0,
 
 
@@ -17,12 +18,10 @@ js13k.Renderer = {
 	checkSelectables() {
 		let hits = [];
 
-		const cam = W.next.camera;
-		const ray = {
-			origin: [cam.x, cam.y, cam.z],
-			dir: [
-				// TODO: rx/ry/rz are rotation values in degree, but I need a normalized 3D vector
-			],
+		const ray = this.getRayFromCam();
+		const aabb = {
+			min: [],
+			max: [],
 		};
 
 		for( const name in W.next ) {
@@ -31,7 +30,26 @@ js13k.Renderer = {
 			}
 
 			const o = W.next[name];
-			const hitPoint = this.rayHitsObject( ray, o );
+			aabb.min[0] = o.x;
+			aabb.min[1] = o.y;
+			aabb.min[2] = o.z;
+
+			if( o.g ) {
+				const group = W.next[o.g];
+				aabb.min[0] += group.x;
+				aabb.min[1] += group.y;
+				aabb.min[2] += group.z;
+			}
+
+			aabb.max[0] = aabb.min[0] + o.w;
+			aabb.max[1] = aabb.min[1] + o.h;
+			aabb.max[2] = aabb.min[2];
+
+			if( o.type != 'plane' ) {
+				aabb.max[2] += o.d; // "plane" has no depth, but a default value of 1
+			}
+
+			const hitPoint = this.rayHitsObject( ray, aabb );
 
 			if( hitPoint ) {
 				hits.push( [o, hitPoint] );
@@ -41,97 +59,6 @@ js13k.Renderer = {
 		// TODO: return closest to camera
 
 		return hits;
-	},
-
-
-	/**
-	 * "Fast Ray-Box Intersection" by Andrew Woo.
-	 * From "Graphics Gems", Academic Press, 1990
-	 * @param {object}   ray
-	 * @param {number[]} ray.origin
-	 * @param {number[]} ray.dir
-	 * @param {object}   o
-	 * @returns {number[]?}
-	 */
-	rayHitsObject( ray, o ) {
-		const RIGHT = 0;
-		const LEFT = 1;
-		const MIDDLE = 2;
-
-		const minB = [o.x, o.y, o.z];
-		const maxB = [
-			o.x + o.w,
-			o.y + o.h,
-			o.z + o.d,
-		];
-
-		let inside = true;
-		let quadrant = [];
-		let maxT = [];
-		let candidatePlane = [];
-		let coord = [];
-
-		/* Find candidate planes; this loop can be avoided if
-		rays cast all from the eye(assume perpsective view) */
-		for( let i = 0; i < 3; i++ ) {
-			if( ray.origin[i] < minB[i] ) {
-				quadrant[i] = LEFT;
-				candidatePlane[i] = minB[i];
-				inside = false;
-			}
-			else if( ray.origin[i] > maxB[i] ) {
-				quadrant[i] = RIGHT;
-				candidatePlane[i] = maxB[i];
-				inside = false;
-			}
-			else {
-				quadrant[i] = MIDDLE;
-			}
-		}
-
-		/* Ray origin inside bounding box */
-		if( inside )	{
-			return ray.origin;
-		}
-
-		/* Calculate T distances to candidate planes */
-		for( let i = 0; i < 3; i++ ) {
-			if( quadrant[i] != MIDDLE && ray.dir[i] != 0 ) {
-				maxT[i] = ( candidatePlane[i] - ray.origin[i] ) / ray.dir[i];
-			}
-			else {
-				maxT[i] = -1;
-			}
-		}
-
-		/* Get largest of the maxT's for final choice of intersection */
-		let whichPlane = 0;
-
-		for( let i = 1; i < 3; i++ ) {
-			if( maxT[whichPlane] < maxT[i] ) {
-				whichPlane = i;
-			}
-		}
-
-		/* Check final candidate actually inside box */
-		if( maxT[whichPlane] < 0 ) {
-			return null;
-		}
-
-		for( let i = 0; i < 3; i++ ) {
-			if( whichPlane != i ) {
-				coord[i] = ray.origin[i] + maxT[whichPlane] * ray.dir[i];
-
-				if( coord[i] < minB[i] || coord[i] > maxB[i] ) {
-					return null;
-				}
-			}
-			else {
-				coord[i] = candidatePlane[i];
-			}
-		}
-
-		return coord;
 	},
 
 
@@ -155,6 +82,25 @@ js13k.Renderer = {
 		ctx.imageSmoothingEnabled = false;
 
 		return [canvas, ctx];
+	},
+
+
+	/**
+	 *
+	 * @returns {object}
+	 */
+	getRayFromCam() {
+		const cam = W.next.camera;
+
+		const ray = {
+			origin: [cam.x, cam.y, cam.z],
+			// Default cam direction with applied rotation
+			dir: this.defaultCamDir.matrixTransform( cam.m ),
+		};
+
+		ray.dir = [ray.dir.x, ray.dir.y, ray.dir.z];
+
+		return ray;
 	},
 
 
@@ -199,6 +145,92 @@ js13k.Renderer = {
 		// };
 
 		// img.src = 'i.png';
+	},
+
+
+	/**
+	 * "Fast Ray-Box Intersection" by Andrew Woo.
+	 * From "Graphics Gems", Academic Press, 1990
+	 * @param {object}   ray
+	 * @param {number[]} ray.origin
+	 * @param {number[]} ray.dir
+	 * @param {object}   o
+	 * @param {number[]} o.max
+	 * @param {number[]} o.min
+	 * @returns {number[]?}
+	 */
+	rayHitsObject( ray, o ) {
+		const RIGHT = 0;
+		const LEFT = 1;
+		const MIDDLE = 2;
+
+		let inside = true;
+		let quadrant = [];
+		let maxT = [];
+		let candidatePlane = [];
+		let coord = [];
+
+		/* Find candidate planes; this loop can be avoided if
+		rays cast all from the eye(assume perpsective view) */
+		for( let i = 0; i < 3; i++ ) {
+			if( ray.origin[i] < o.min[i] ) {
+				quadrant[i] = LEFT;
+				candidatePlane[i] = o.min[i];
+				inside = false;
+			}
+			else if( ray.origin[i] > o.max[i] ) {
+				quadrant[i] = RIGHT;
+				candidatePlane[i] = o.max[i];
+				inside = false;
+			}
+			else {
+				quadrant[i] = MIDDLE;
+			}
+		}
+
+		/* Ray origin inside bounding box */
+		if( inside )	{
+			return ray.origin;
+		}
+
+		/* Calculate T distances to candidate planes */
+		for( let i = 0; i < 3; i++ ) {
+			if( quadrant[i] != MIDDLE && ray.dir[i] != 0 ) {
+				maxT[i] = ( candidatePlane[i] - ray.origin[i] ) / ray.dir[i];
+			}
+			else {
+				maxT[i] = -1;
+			}
+		}
+
+		/* Get largest of the maxT's for final choice of intersection */
+		let whichPlane = 0;
+
+		for( let i = 1; i < 3; i++ ) {
+			if( maxT[whichPlane] < maxT[i] ) {
+				whichPlane = i;
+			}
+		}
+
+		/* Check final candidate actually inside box */
+		if( maxT[whichPlane] < 0 ) {
+			return null;
+		}
+
+		for( let i = 0; i < 3; i++ ) {
+			if( whichPlane != i ) {
+				coord[i] = ray.origin[i] + maxT[whichPlane] * ray.dir[i];
+
+				if( coord[i] < o.min[i] || coord[i] > o.max[i] ) {
+					return null;
+				}
+			}
+			else {
+				coord[i] = candidatePlane[i];
+			}
+		}
+
+		return coord;
 	},
 
 
