@@ -30,9 +30,16 @@ js13k.Renderer = {
 			}
 
 			const o = W.next[name];
-			aabb.min[0] = o.x;
-			aabb.min[1] = o.y;
-			aabb.min[2] = o.z;
+			let d = 0;
+
+			// "plane" has no depth, but a default value of 1
+			if( o.type != 'plane' && o.type != 'billboard' ) {
+				d = o.d;
+			}
+
+			aabb.min[0] = o.x - o.w / 2;
+			aabb.min[1] = o.y - o.h / 2;
+			aabb.min[2] = o.z - d / 2;
 
 			if( o.g ) {
 				const group = W.next[o.g];
@@ -43,11 +50,7 @@ js13k.Renderer = {
 
 			aabb.max[0] = aabb.min[0] + o.w;
 			aabb.max[1] = aabb.min[1] + o.h;
-			aabb.max[2] = aabb.min[2];
-
-			if( o.type != 'plane' ) {
-				aabb.max[2] += o.d; // "plane" has no depth, but a default value of 1
-			}
+			aabb.max[2] = aabb.min[2] + d;
 
 			const hitPoint = this.rayHitsObject( ray, aabb );
 
@@ -56,14 +59,49 @@ js13k.Renderer = {
 			}
 		}
 
-		// TODO: return closest to camera
-
-		return hits;
+		return this.getClosest( ray.origin, hits );
 	},
 
 
 	drawPause() {
 		// TODO:
+	},
+
+
+	/**
+	 *
+	 * @param {number[]} origin 
+	 * @param {object[]} hits 
+	 * @returns {object?}
+	 */
+	getClosest( origin, hits ) {
+		if( hits.length == 1 ) {
+			return hits[0][0];
+		}
+
+		let closest = null;
+		let minDist = Infinity;
+
+		for( let i = 0; i < hits.length; i++ ) {
+			const p = hits[i][1];
+			const v = [
+				p[0] - origin[0],
+				p[1] - origin[1],
+				p[2] - origin[2],
+			];
+			const dist = Math.sqrt(
+				v[0] * v[0] +
+				v[1] * v[1] +
+				v[2] * v[2]
+			);
+
+			if( dist < minDist ) {
+				closest = hits[i][0];
+				minDist = dist;
+			}
+		}
+
+		return closest;
 	},
 
 
@@ -91,11 +129,12 @@ js13k.Renderer = {
 	 */
 	getRayFromCam() {
 		const cam = W.next.camera;
+		const rotMatrix = new DOMMatrix().rotateSelf( cam.rx, cam.ry, cam.rz );
 
 		const ray = {
 			origin: [cam.x, cam.y, cam.z],
 			// Default cam direction with applied rotation
-			dir: this.defaultCamDir.matrixTransform( cam.m ),
+			dir: this.defaultCamDir.matrixTransform( rotMatrix ),
 		};
 
 		ray.dir = [ray.dir.x, ray.dir.y, ray.dir.z];
@@ -116,35 +155,16 @@ js13k.Renderer = {
 
 		this.resize();
 
-		this.loadAssets( () => {
-			// `W.onDraw` is a custom extension and not part of the original framework
-			W.onDraw = this.update.bind( this );
+		// `W.onDraw` is a custom extension and not part of the original framework
+		W.onDraw = this.update.bind( this );
 
-			W.reset( this.cnv );
-			W.clearColor( '000' );
-			W.ambient( 0.2 );
+		W.reset( this.cnv );
+		W.clearColor( '000' );
+		W.ambient( 0.2 );
 
-			this.registerEvents();
+		this.registerEvents();
 
-			this.level = new js13k.Level();
-		} );
-	},
-
-
-	/**
-	 *
-	 * @param {function} cb
-	 */
-	loadAssets( cb ) {
-		cb();
-		// const img = new Image();
-
-		// img.onload = () => {
-		// 	this.images = img;
-		// 	cb();
-		// };
-
-		// img.src = 'i.png';
+		this.level = new js13k.Level();
 	},
 
 

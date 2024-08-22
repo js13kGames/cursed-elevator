@@ -11,7 +11,6 @@ const js13k = {
 	// Config
 	FONT_SANS: 'Arial, sans-serif',
 	FONT_SERIF: '"Times New Roman", serif',
-	FONT_MONO: '"Courier New", monospace',
 	TARGET_FPS: 60,
 
 
@@ -19,8 +18,10 @@ const js13k = {
 	 *
 	 */
 	init() {
-		js13k.Input.init();
-		js13k.Renderer.init();
+		js13k.Assets.loadAll( () => {
+			js13k.Input.init();
+			js13k.Renderer.init();
+		} );
 	},
 
 

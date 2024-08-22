@@ -82,7 +82,7 @@ W = {
 			'precision highp float;' +
 			// Received from the vertex shader: position, color, texture coordinates, normal (if any)
 			'in vec4 v_pos, v_col, v_uv, v_normal;' +
-			// light direction
+			// light position
 			'uniform vec3 light;' +
 			// options [0: smooth, 1: shading enabled, 2: ambient, 3: mix]
 			'uniform vec4 o;' +
@@ -91,18 +91,17 @@ W = {
 			'out vec4 c;' +
 
 			'void main() {' +
+				'vec3 light_dir = normalize(light - v_pos.xyz);' +
 				'c = mix(texture(sampler, v_uv.xy), v_col, o[3]);' +
-				'if(o[1] > 0.) {' +
-					'c = vec4(' +
-						'c.rgb * (max(0., dot(light, -normalize(' +
-							'o[0] > 0.' + // is smoothing enabled
-							'? vec3(v_normal.xyz)' + // smooth normal
-							': cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz))' + // flat normal
-						')))' +
-						'+ o[2]),' + // add ambient light
-						'c.a' +
-					');' +
-				'}' +
+				'c = vec4(' +
+					'c.rgb * (max(0., dot(light_dir, normalize(' +
+						'o[0] > 0.' + // is smoothing enabled
+						'? vec3(v_normal.xyz)' + // smooth normal
+						': cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz))' + // flat normal
+					')))' +
+					'+ o[2]),' + // add ambient light
+					'c.a' +
+				');' +
 			'}'
 		);
 
@@ -134,7 +133,7 @@ W = {
 		W.gl.enable( 2929 /* DEPTH_TEST */ );
 
 		// When everything is loaded: set default light / camera
-		W.light( { 'y': -1 } );
+		W.light( { 'y': 1 } );
 		W.camera( { 'fov': 30 } );
 
 		// Draw the scene. Ignore the first frame because the default camera will probably be overwritten by the program
@@ -353,7 +352,7 @@ W = {
 		// Disable alpha blending for the next frame
 		W.gl.disable( 3042 /* BLEND */ );
 
-		// Transition the light's direction and send it to the shaders
+		// Transition the light's position and send it to the shaders
 		W.gl.uniform3f(
 			W.gl.getUniformLocation( W.program, 'light' ),
 			W.lerp( 'light', 'x' ), W.lerp( 'light', 'y' ), W.lerp( 'light', 'z' )

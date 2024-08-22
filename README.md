@@ -18,5 +18,6 @@ Theme: **Triskaidekaphobia** *(fear of the number 13)*
 
 ## Resources
 
+* [ptex – Mini randomized pixel-art textures](https://xem.github.io/pxtex/)
 * [W – A micro WebGL2 framework](https://xem.github.io/W/)
 * [ZzFX – Zuper Zmall Zound Zynth](https://github.com/KilledByAPixel/ZzFX)

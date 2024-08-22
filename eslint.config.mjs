@@ -26,6 +26,7 @@ export default [
 			globals: {
 				...globals.browser,
 				js13k: 'writable',
+				pxtex: 'readonly',
 				W: 'readonly',
 				zzfx: 'readonly',
 			},

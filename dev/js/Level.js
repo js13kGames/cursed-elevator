@@ -10,6 +10,7 @@ js13k.Level = class {
 	 */
 	constructor() {
 		this.timer = 0;
+		this._lastCheck = 0;
 
 		this._evX = 2;
 		this._evY = 3;
@@ -110,15 +111,29 @@ js13k.Level = class {
 		const offsetY = 6 * ( btnH + padding ) / 2;
 
 		for( let i = 0; i < 14; i++ ) {
+			const n = 'btn' + i;
+			const x = ( i % 2 ) * ( padding + btnW ) - offsetX;
+			const y = ~~( i / 2 ) * ( padding + btnH ) - offsetY;
+
 			W.cube( {
 				'g': g,
-				'n': 's_btn' + i,
-				'x': ( i % 2 ) * ( padding + btnW ) - offsetX,
-				'y': ~~( i / 2 ) * ( padding + btnH ) - offsetY,
+				'n': n,
+				'x': x,
+				'y': y,
 				'w': btnW,
 				'h': btnH,
 				'd': 0.02,
 				'b': 'ddd',
+			} );
+			W.plane( {
+				'g': g,
+				'n': 's_lbl_' + n,
+				'x': x,
+				'y': y,
+				'z': 0.011,
+				'w': btnW,
+				'h': btnH,
+				't': js13k.Assets.textures['s_lbl_' + n],
 			} );
 		}
 	}
@@ -164,7 +179,9 @@ js13k.Level = class {
 			'ry': 90,
 			'w': this._evZ,
 			'h': this._evY,
-			'b': 'aaa',
+			'b': '999',
+			't': js13k.Assets.textures.wall,
+			'mix': 0.5,
 		} );
 		// wall: right
 		W.plane( {
@@ -175,7 +192,9 @@ js13k.Level = class {
 			'ry': -90,
 			'w': this._evZ,
 			'h': this._evY,
-			'b': 'aaa',
+			'b': '999',
+			't': js13k.Assets.textures.wall,
+			'mix': 0.5,
 		} );
 		// wall: back
 		W.plane( {
@@ -187,6 +206,8 @@ js13k.Level = class {
 			'w': this._evX,
 			'h': this._evY,
 			'b': '999',
+			't': js13k.Assets.textures.wall,
+			'mix': 0.5,
 		} );
 		// front, left side
 		W.cube( {
@@ -238,6 +259,45 @@ js13k.Level = class {
 	 */
 	update( dt ) {
 		this.timer += dt;
+
+		// Only check objects every 50 ms
+		if( this.timer - this._lastCheck > 0.05 * js13k.TARGET_FPS ) {
+			this._lastCheck = this.timer;
+
+			const hit = js13k.Renderer.checkSelectables();
+
+			if( hit && hit.n != this._lastSelectable?.hit ) {
+				// Highlight button
+				if( hit.n.startsWith( 's_lbl_btn' ) ) {
+					const btnN = hit.n.substring( 6 );
+					const btn = W.next[btnN];
+
+					if( btn ) {
+						if( this._lastSelectable ) {
+							W.move( {
+								'n': this._lastSelectable.n,
+								'b': this._lastSelectable.b,
+							} );
+						}
+
+						this._lastSelectable = {
+							hit: hit.n,
+							'n': btnN,
+							'b': btn.b,
+						};
+
+						W.move( { 'n': btnN, 'b': 'fff' } );
+					}
+				}
+			}
+			else if( !hit && this._lastSelectable ) {
+				W.move( {
+					'n': this._lastSelectable.n,
+					'b': this._lastSelectable.b,
+				} );
+				this._lastSelectable = null;
+			}
+		}
 	}
 
 
