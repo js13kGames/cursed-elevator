@@ -6,7 +6,10 @@
  */
 js13k.Renderer = {
 
-
+	camera: {
+		rx: 0,
+		ry: 0,
+	},
 	defaultCamDir: new DOMPoint( 0, 0, -1 ),
 	timer: 0,
 
@@ -63,8 +66,16 @@ js13k.Renderer = {
 	},
 
 
+	/**
+	 *
+	 */
 	drawPause() {
-		// TODO:
+		this.ctxUI.fillStyle = '#00000070';
+		this.ctxUI.fillRect( 0, 0, this.cnvUI.width, this.cnvUI.height );
+		this.ctxUI.fillStyle = '#fff';
+		this.ctxUI.font = '96px ' + js13k.FONT_SERIF;
+		this.ctxUI.textAlign = 'center';
+		this.ctxUI.fillText( 'PAUSED', this.cnvUI.width / 2, this.cnvUI.height / 2 );
 	},
 
 
@@ -259,15 +270,20 @@ js13k.Renderer = {
 	 * @param {number} [timestamp = 0]
 	 */
 	update( timestamp = 0 ) {
-		js13k.Input.update();
-
 		if( timestamp && this.last ) {
 			const timeElapsed = timestamp - this.last; // Time that passed between frames. [ms]
 
 			// Target speed of 60 FPS (=> 1000 / 60 ~= 16.667 [ms]).
 			const dt = timeElapsed / ( 1000 / js13k.TARGET_FPS );
 
+			this.ctxUI.clearRect( 0, 0, this.cnvUI.width, this.cnvUI.height );
 			this.ctxUI.imageSmoothingEnabled = false;
+
+			// Draw FPS info
+			this.ctxUI.fillStyle = '#fff';
+			this.ctxUI.font = '11px monospace';
+			this.ctxUI.textAlign = 'left';
+			this.ctxUI.fillText( ~~( js13k.TARGET_FPS / dt ) + ' FPS', 10, 20 );
 
 			if( this.isPaused ) {
 				this.drawPause();
@@ -275,18 +291,7 @@ js13k.Renderer = {
 			}
 
 			this.timer += dt;
-
 			this.level.update( dt );
-			this.level.render();
-
-			// // Draw FPS info
-			// this.ctxUI.fillStyle = '#fff';
-			// this.ctxUI.font = '600 16px ' + js13k.FONT_MONO;
-			// this.ctxUI.textAlign = 'left';
-			// this.ctxUI.fillText(
-			// 	~~( js13k.TARGET_FPS / dt ) + ' FPS, ' + Math.round( this.scale * 1000 ) / 1000,
-			// 	js13k.TILE_SIZE, this.cnv.height / this.scale - js13k.TILE_SIZE
-			// );
 		}
 
 		this.last = timestamp;
@@ -298,6 +303,7 @@ js13k.Renderer = {
 	 */
 	pause() {
 		this.isPaused = true;
+		W.isPaused = true;
 	},
 
 
@@ -305,30 +311,63 @@ js13k.Renderer = {
 	 *
 	 */
 	registerEvents() {
+		let mouseLastX = 0;
+		let mouseLastY = 0;
+		const camSpeed = 0.5;
+
 		window.addEventListener( 'resize', _ev => this.resize() );
 
 		const keys = js13k.Input.getKeysForAction( js13k.Input.ACTION.PAUSE );
-
-		setInterval(
-			() => {
-				// Inputs are not updated if main loop is not running.
-				if( this.isPaused ) {
-					js13k.Input.update();
-				}
-
-				keys.gamepad.forEach( key => {
-					if( js13k.Input.isPressedGamepad( key, true ) ) {
-						this.togglePause();
-					}
-				} );
-			},
-			100
-		);
-
-		const cbPause = () => this.togglePause();
+		const cbPause = () => {
+			this.togglePause();
+			mouseLastX = null;
+			mouseLastY = null;
+		};
 		keys.keyboard.forEach( key => js13k.Input.onKeyUp( key, cbPause ) );
 
-		js13k.Input.on( 'gp_disconnect', () => this.pause() );
+		this.cnv.addEventListener( 'mousedown', ev => {
+			if( ev.button !== 0 || !this.level ) {
+				return;
+			}
+
+			this.level.selectObject();
+		} );
+
+		this.cnv.addEventListener( 'mouseenter', ev => {
+			mouseLastX = ev.clientX;
+			mouseLastY = ev.clientY;
+		} );
+
+		this.cnv.addEventListener( 'mousemove', ev => {
+			if( !this.level || this.isPaused ) {
+				return;
+			}
+
+			if( mouseLastX === null ) {
+				mouseLastX = ev.clientX;
+				mouseLastY = ev.clientY;
+
+				return;
+			}
+
+			this.camera.rx -= ( ev.clientY - mouseLastY ) * camSpeed;
+			this.camera.ry -= ( ev.clientX - mouseLastX ) * camSpeed;
+
+			this.camera.rx = Math.min( 80, Math.max( -60, this.camera.rx ) );
+			this.camera.ry = this.camera.ry % 360;
+
+			W.camera( this.camera );
+
+			mouseLastX = ev.clientX;
+			mouseLastY = ev.clientY;
+		} );
+
+		// Reset camera
+		js13k.Input.onKeyUp( 'KeyR', () => {
+			this.camera.rx = 0;
+			this.camera.ry = 0;
+			W.camera( this.camera );
+		} );
 	},
 
 
@@ -360,6 +399,7 @@ js13k.Renderer = {
 	 */
 	unpause() {
 		this.isPaused = false;
+		W.isPaused = false;
 	},
 
 

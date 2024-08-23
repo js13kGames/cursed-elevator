@@ -19,52 +19,34 @@ js13k.Input = {
 	},
 
 	_ignoreUntilReleased: {},
-	_on: {
-		'gp_connect': [],
-		'gp_disconnect': []
-	},
 	_onKeyDown: {},
 	_onKeyUp: {},
 
-	gamepads: {},
 	keystate: {},
-
-	camera: {
-		rx: 0,
-		ry: 0,
-	},
 
 
 	/**
 	 *
 	 */
 	buildActionKeyMap() {
-		// I wish I knew which gamepad button is which, but it is
-		// absolutely inconsistent on Linux with Firefox and Chromium.
 		this.ACTION_KEY_MAP = {
 			[this.ACTION.PAUSE]: {
 				keyboard: ['Escape'],
-				gamepad: [9]
 			},
 			[this.ACTION.UP]: {
 				keyboard: ['ArrowUp', 'KeyW', 'KeyZ', 'KeyY'], // Z: French layout, Y: Also french layout, because Firefox behaves weird
-				gamepad: [12]
 			},
 			[this.ACTION.LEFT]: {
 				keyboard: ['ArrowLeft', 'KeyA', 'KeyQ'], // Q: French layout
-				gamepad: [14]
 			},
 			[this.ACTION.DOWN]: {
 				keyboard: ['ArrowDown', 'KeyS'],
-				gamepad: [13]
 			},
 			[this.ACTION.RIGHT]: {
 				keyboard: ['ArrowRight', 'KeyD'],
-				gamepad: [15]
 			},
 			[this.ACTION.INTERACT]: {
-				keyboard: ['E', 'Space', 'Enter'],
-				gamepad: [0, 2] // X, Square?
+				keyboard: ['KeyE', 'Enter'],
 			},
 		};
 	},
@@ -92,35 +74,12 @@ js13k.Input = {
 			y = 1;
 		}
 
-		if( !x || !y ) {
-			const threshold = 0.3;
-
-			for( const index in this.gamepads ) {
-				const gp = this.gamepads[index];
-
-				if( gp.axes[0] && Math.abs( gp.axes[0] ) > threshold ) {
-					x = ( gp.axes[0] > 0 ) ? 1 : -1;
-				}
-				else if( gp.axes[2] && Math.abs( gp.axes[2] ) > threshold ) {
-					x = ( gp.axes[2] > 0 ) ? 1 : -1;
-				}
-
-				if( gp.axes[1] && Math.abs( gp.axes[1] ) > threshold ) {
-					y = ( gp.axes[1] > 0 ) ? 1 : -1;
-				}
-				else if( gp.axes[3] && Math.abs( gp.axes[3] ) > threshold ) {
-					y = ( gp.axes[3] > 0 ) ? 1 : -1;
-				}
-			}
-		}
-
 		return { x, y };
 	},
 
 
 	/**
-	 * Get the keyboard key codes and gamepad
-	 * button codes for a certain action.
+	 * Get the keyboard key codes for a certain action.
 	 * @param  {number} action
 	 * @return {object}
 	 */
@@ -141,7 +100,7 @@ js13k.Input = {
 	/**
 	 *
 	 * @param  {number}   action
-	 * @param  {?boolean} forget
+	 * @param  {boolean?} forget
 	 * @return {boolean}
 	 */
 	isPressed( action, forget ) {
@@ -153,120 +112,13 @@ js13k.Input = {
 			}
 		}
 
-		for( const key of keys.gamepad ) {
-			if( this.isPressedGamepad( key, forget ) ) {
-				return true;
-			}
-		}
-
-		// Also check axes.
-		// Has to be done as workaround for Firefox which does
-		// not recognize D-Pad input as buttons on Linux.
-		// @see https://bugzilla.mozilla.org/show_bug.cgi?id=1464940
-		if( action == this.ACTION.LEFT ) {
-			for( const index in this.gamepads ) {
-				const gp = this.gamepads[index];
-
-				if( gp.axes[6] && gp.axes[6] <= -0.2 ) {
-					if( this._ignoreUntilReleased['axis6-'] ) {
-						return false;
-					}
-
-					if( forget ) {
-						this._ignoreUntilReleased['axis6-'] = true;
-					}
-
-					return true;
-				}
-			}
-		}
-		else if( action == this.ACTION.RIGHT ) {
-			for( const index in this.gamepads ) {
-				const gp = this.gamepads[index];
-
-				if( gp.axes[6] && gp.axes[6] >= 0.2 ) {
-					if( this._ignoreUntilReleased['axis6+'] ) {
-						return false;
-					}
-
-					if( forget ) {
-						this._ignoreUntilReleased['axis6+'] = true;
-					}
-
-					return true;
-				}
-			}
-		}
-		else if( action == this.ACTION.UP ) {
-			for( const index in this.gamepads ) {
-				const gp = this.gamepads[index];
-
-				if( gp.axes[7] && gp.axes[7] <= -0.2 ) {
-					if( this._ignoreUntilReleased['axis7-'] ) {
-						return false;
-					}
-
-					if( forget ) {
-						this._ignoreUntilReleased['axis7-'] = true;
-					}
-
-					return true;
-				}
-			}
-		}
-		else if( action == this.ACTION.DOWN ) {
-			for( const index in this.gamepads ) {
-				const gp = this.gamepads[index];
-
-				if( gp.axes[7] && gp.axes[7] >= 0.2 ) {
-					if( this._ignoreUntilReleased['axis7+'] ) {
-						return false;
-					}
-
-					if( forget ) {
-						this._ignoreUntilReleased['axis7+'] = true;
-					}
-
-					return true;
-				}
-			}
-		}
-
-		return false;
-	},
-
-
-	/**
-	 * Check if a button is currently being pressed.
-	 * @param  {number}  code   - Button code.
-	 * @param  {boolean} forget
-	 * @return {boolean}
-	 */
-	isPressedGamepad( code, forget ) {
-		for( const index in this.gamepads ) {
-			const buttons = this.gamepads[index].buttons;
-			const button = buttons[code];
-
-			if( button && button.pressed ) {
-				if( this._ignoreUntilReleased[code] ) {
-					return false;
-				}
-
-				if( forget ) {
-					this._ignoreUntilReleased[code] = true;
-				}
-
-				return true;
-			}
-		}
-
 		return false;
 	},
 
 
 	/**
 	 * Check if a key is currently being pressed.
-	 * @param  {number}  code   - Key code.
+	 * @param  {string}  code   - Key code.
 	 * @param  {boolean} forget
 	 * @return {boolean}
 	 */
@@ -283,35 +135,6 @@ js13k.Input = {
 		}
 
 		return false;
-	},
-
-
-	// /**
-	//  * Remove an event listener.
-	//  * @param {string}    type
-	//  * @param {?function} cb
-	//  */
-	// off( type, cb ) {
-	// 	if( typeof cb !== 'function' ) {
-	// 		this._on[type] = [];
-	// 		return;
-	// 	}
-
-	// 	const pos = this._on[type].indexOf( cb );
-
-	// 	if( pos >= 0 ) {
-	// 		this._on[type].splice( pos, 1 );
-	// 	}
-	// },
-
-
-	/**
-	 * Add an event listener.
-	 * @param {string}   type
-	 * @param {function} cb
-	 */
-	on( type, cb ) {
-		this._on[type].push( cb );
 	},
 
 
@@ -343,44 +166,6 @@ js13k.Input = {
 	 *
 	 */
 	registerEvents() {
-		let isMovingCam = false;
-		let mouseLastX = 0;
-		let mouseLastY = 0;
-
-		const camSpeed = 0.5;
-
-		document.body.onmousedown = ev => {
-			if( ev.button !== 0 || !js13k.Renderer.level ) {
-				return;
-			}
-
-			isMovingCam = true;
-
-			mouseLastX = ev.clientX;
-			mouseLastY = ev.clientY;
-		};
-
-		document.body.onmouseup = _ev => {
-			isMovingCam = false;
-		};
-
-		document.body.onmousemove = ev => {
-			if( !isMovingCam || !js13k.Renderer.level ) {
-				return;
-			}
-
-			this.camera.rx -= ( ev.clientY - mouseLastY ) * camSpeed;
-			this.camera.ry -= ( ev.clientX - mouseLastX ) * camSpeed;
-
-			this.camera.rx = Math.min( 80, Math.max( -60, this.camera.rx ) );
-			this.camera.ry = this.camera.ry % 360;
-
-			W.camera( this.camera );
-
-			mouseLastY = ev.clientY;
-			mouseLastX = ev.clientX;
-		};
-
 		document.body.onkeydown = ev => {
 			const ks = this.keystate[ev.code];
 
@@ -404,52 +189,7 @@ js13k.Input = {
 				this._onKeyUp[ev.code].forEach( cb => cb() );
 			}
 		};
-
-		window.addEventListener( 'gamepadconnected', ev => {
-			this.gamepads[ev.gamepad.index] = ev.gamepad;
-
-			this._on['gp_connect'].forEach( cb => cb() );
-		} );
-
-		window.addEventListener( 'gamepaddisconnected', ev => {
-			delete this.gamepads[ev.gamepad.index];
-
-			this._on['gp_disconnect'].forEach( cb => cb() );
-		} );
 	},
-
-
-	/**
-	 * Update gamepad data.
-	 */
-	update() {
-		const gamepads = navigator.getGamepads();
-
-		for( const gamepad of gamepads ) {
-			// Chromium has 4 indices, but they may be null as value.
-			if( !gamepad ) {
-				continue;
-			}
-
-			this.gamepads[gamepad.index] = gamepad;
-
-			for( const code in this._ignoreUntilReleased ) {
-				if( code == 'axis6-' || code == 'axis6+' ) {
-					if( !gamepad.axes[6] ) {
-						delete this._ignoreUntilReleased[code];
-					}
-				}
-				else if( code == 'axis7-' || code == 'axis7+' ) {
-					if( !gamepad.axes[7] ) {
-						delete this._ignoreUntilReleased[code];
-					}
-				}
-				else if( gamepad.buttons[code] && !gamepad.buttons[code].pressed ) {
-					delete this._ignoreUntilReleased[code];
-				}
-			}
-		}
-	}
 
 
 };

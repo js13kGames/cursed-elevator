@@ -247,9 +247,26 @@ js13k.Level = class {
 
 	/**
 	 *
+	 * @param {object} o
 	 */
-	render() {
+	handleSelected( o ) {
+		if( !o ) {
+			return;
+		}
+
 		// TODO:
+		console.log( o );
+	}
+
+
+	/**
+	 *
+	 */
+	selectObject() {
+		if( this._lastSelectable ) {
+			const o = W.next[this._lastSelectable.n];
+			this.handleSelected( o );
+		}
 	}
 
 
@@ -297,6 +314,13 @@ js13k.Level = class {
 				} );
 				this._lastSelectable = null;
 			}
+		}
+
+		if(
+			this._lastSelectable &&
+			js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true )
+		) {
+			this.selectObject();
 		}
 	}
 

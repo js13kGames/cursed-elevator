@@ -18,6 +18,7 @@ W = {
 		W.current = {};       // Objects current states
 		W.next = {};          // Objects next states
 		W.textures = {};      // Textures list
+		W.isPaused = false;
 
 		// WebGL context
 		W.gl = canvas.getContext( 'webgl2' );
@@ -277,6 +278,11 @@ W = {
 		dt = now - W.lastFrame;
 		W.lastFrame = now;
 		requestAnimationFrame( W.draw );
+
+		if( W.isPaused ) {
+			W.onDraw( now );
+			return;
+		}
 
 		if( W.next.camera.g ) {
 			W.render( W.next[W.next.camera.g], dt, 1 );
