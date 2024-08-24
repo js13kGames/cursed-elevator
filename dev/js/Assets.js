@@ -21,8 +21,7 @@ js13k.Assets = {
 		for( let i = 0; i < 14; i++ ) {
 			const key = 's_lbl_btn' + i;
 
-			const [canvas, ctx] = js13k.Renderer.getOffscreenCanvas( w, h );
-			canvas.id = key;
+			const [canvas, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
 			ctx.font = '600 18px ' + js13k.FONT_SANS;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
@@ -38,12 +37,26 @@ js13k.Assets = {
 	 * @private
 	 */
 	_createSurfaces() {
-		const [canvas, _] = js13k.Renderer.getOffscreenCanvas( 20, 30 );
-		canvas.id = 'wall';
+		const cnvWall = js13k.Renderer.getOffscreenCanvas( 200, 300, 'wall' )[0];
 		// HTMLCanvas, H, S, L, variation, width, height
-		pxtex( canvas, 0, 0, 87, 5, 20, 30 );
+		pxtex( cnvWall, 0, 0, 20, 3, 200, 300 );
+		this.textures.wall = cnvWall;
 
-		this.textures.wall = canvas;
+		const cnvCeiling = js13k.Renderer.getOffscreenCanvas( 100, 100, 'ceil' )[0];
+		pxtex( cnvCeiling, 0, 0, 100, 3, 100, 100 );
+		this.textures.ceil = cnvCeiling;
+
+		const cnvFloor = js13k.Renderer.getOffscreenCanvas( 100, 100, 'floor' )[0];
+		pxtex( cnvFloor, 0, 0, 10, 1, 100, 100 );
+		this.textures.floor = cnvFloor;
+
+		const cnvFrontSide = js13k.Renderer.getOffscreenCanvas( 40, 300, 'fs' )[0];
+		pxtex( cnvFrontSide, 0, 0, 20, 3, 40, 300 );
+		this.textures.fs = cnvFrontSide;
+
+		const cnvFrontTop = js13k.Renderer.getOffscreenCanvas( 200, 75, 'ft' )[0];
+		pxtex( cnvFrontTop, 0, 0, 20, 3, 200, 75 );
+		this.textures.ft = cnvFrontTop;
 	},
 
 

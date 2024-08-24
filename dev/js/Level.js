@@ -1,6 +1,14 @@
 'use strict';
 
 
+js13k.STATE = {
+	OPEN: 1,
+	OPENING: 2,
+	CLOSED: 3,
+	CLOSING: 4,
+};
+
+
 js13k.Level = class {
 
 
@@ -12,9 +20,15 @@ js13k.Level = class {
 		this.timer = 0;
 		this._lastCheck = 0;
 
+		this.states = {
+			doors: js13k.STATE.OPEN,
+		};
+
 		this._evX = 2;
 		this._evY = 3;
 		this._evZ = 2;
+
+		W.light( { 'y': this._evY / 2 - 0.2 } );
 
 		this._buildElevatorWalls();
 		this._buildElevatorDoors();
@@ -53,28 +67,35 @@ js13k.Level = class {
 	 * @private
 	 */
 	_buildElevatorDoors() {
+		const doorWidth = this._evX / 2;
+
+		this._rightDoorClosed = doorWidth / 2 + 0.0025; // leave a very small gap open
+		this._rightDoorOpen = this._rightDoorClosed + this._evX / 2 - this._evX / 4;
+
 		// Left door
 		W.cube( {
 			'n': 'dl',
-			'x': -( this._evX - this._evX / 5 ) / 2,
+			'x': -this._rightDoorOpen,
 			'y': 0,
 			'z': -this._evZ / 2,
-			'w': this._evX / 5 * 2,
+			'w': doorWidth,
 			'h': this._evY,
 			'd': 0.05,
 			'b': 'aaa',
+			's': 20,
 		} );
 
 		// Right door
 		W.cube( {
 			'n': 'dr',
-			'x': ( this._evX - this._evX / 5 ) / 2,
+			'x': this._rightDoorOpen,
 			'y': 0,
 			'z': -this._evZ / 2,
-			'w': this._evX / 5 * 2,
+			'w': doorWidth,
 			'h': this._evY,
 			'd': 0.05,
 			'b': 'aaa',
+			's': 20,
 		} );
 	}
 
@@ -102,6 +123,7 @@ js13k.Level = class {
 			'w': w,
 			'h': h,
 			'b': 'bbb',
+			's': 20,
 		} );
 
 		const padding = 0.02;
@@ -158,6 +180,8 @@ js13k.Level = class {
 			'h': this._evZ,
 			'rx': -90,
 			'b': '333',
+			't': js13k.Assets.textures.floor,
+			'mix': 0.5,
 		} );
 		// ceiling
 		W.plane( {
@@ -169,6 +193,8 @@ js13k.Level = class {
 			'h': this._evZ,
 			'rx': 90,
 			'b': 'bbb',
+			't': js13k.Assets.textures.ceil,
+			'mix': 0.5,
 		} );
 		// wall: left
 		W.plane( {
@@ -181,6 +207,7 @@ js13k.Level = class {
 			'h': this._evY,
 			'b': '999',
 			't': js13k.Assets.textures.wall,
+			's': 30,
 			'mix': 0.5,
 		} );
 		// wall: right
@@ -194,6 +221,7 @@ js13k.Level = class {
 			'h': this._evY,
 			'b': '999',
 			't': js13k.Assets.textures.wall,
+			's': 30,
 			'mix': 0.5,
 		} );
 		// wall: back
@@ -207,6 +235,7 @@ js13k.Level = class {
 			'h': this._evY,
 			'b': '999',
 			't': js13k.Assets.textures.wall,
+			's': 30,
 			'mix': 0.5,
 		} );
 		// front, left side
@@ -219,6 +248,9 @@ js13k.Level = class {
 			'h': this._evY,
 			'd': 0.1,
 			'b': '999',
+			't': js13k.Assets.textures.fs,
+			's': 30,
+			'mix': 0.5,
 		} );
 		// front, right side
 		W.cube( {
@@ -230,6 +262,9 @@ js13k.Level = class {
 			'h': this._evY,
 			'd': 0.1,
 			'b': '999',
+			't': js13k.Assets.textures.fs,
+			's': 30,
+			'mix': 0.5,
 		} );
 		// front, top
 		W.cube( {
@@ -241,6 +276,65 @@ js13k.Level = class {
 			'h': this._evY / 4,
 			'd': 0.1,
 			'b': '999',
+			't': js13k.Assets.textures.ft,
+			's': 30,
+			'mix': 0.5,
+		} );
+	}
+
+
+	/**
+	 *
+	 * @returns {boolean}
+	 */
+	doorsInMotion() {
+		return [
+			js13k.STATE.CLOSING,
+			js13k.STATE.OPENING,
+		].includes( this.states.doors );
+	}
+
+
+	/**
+	 *
+	 */
+	doorsClose() {
+		if( this.states.doors == js13k.STATE.CLOSED || this.doorsInMotion() ) {
+			return;
+		}
+
+		this.states.doors = js13k.STATE.CLOSING;
+
+		W.move( { 'n': 'dl', 'x': -this._rightDoorClosed, 'a': 1000 } );
+		W.move( {
+			'n': 'dr',
+			'x': this._rightDoorClosed,
+			'a': 1000,
+			'onAnimDone': () => {
+				this.states.doors = js13k.STATE.CLOSED;
+			},
+		} );
+	}
+
+
+	/**
+	 *
+	 */
+	doorsOpen() {
+		if( this.states.doors == js13k.STATE.OPEN || this.doorsInMotion() ) {
+			return;
+		}
+
+		this.states.doors = js13k.STATE.OPENING;
+
+		W.move( { 'n': 'dl', 'x': -this._rightDoorOpen, 'a': 1000 } );
+		W.move( {
+			'n': 'dr',
+			'x': this._rightDoorOpen,
+			'a': 1000,
+			'onAnimDone': () => {
+				this.states.doors = js13k.STATE.OPEN;
+			},
 		} );
 	}
 
@@ -248,14 +342,19 @@ js13k.Level = class {
 	/**
 	 *
 	 * @param {object} o
+	 * @param {string} o.n
 	 */
 	handleSelected( o ) {
 		if( !o ) {
 			return;
 		}
 
-		// TODO:
-		console.log( o );
+		console.debug( o.n, o ); // TODO: remove
+
+		if( o.n.includes( 'btn' ) ) {
+			js13k.Audio.play( js13k.Audio.BUTTON );
+			this.doorsClose();
+		}
 	}
 
 

@@ -4,6 +4,7 @@ import stylistic from '@stylistic/eslint-plugin-js';
 
 
 export default [
+	js.configs.recommended,
 	{
 		ignores: [
 			'build/',
@@ -47,7 +48,7 @@ export default [
 				'unix',
 			],
 			'@stylistic/no-empty': 0,
-			'@stylistic/no-sparse-arrays': 0,
+			'no-sparse-arrays': 0,
 			'no-unused-vars': [
 				'warn',
 				{
@@ -69,5 +70,4 @@ export default [
 			'@stylistic/space-in-parens': ['warn', 'always'],
 		},
 	},
-	js.configs.recommended,
 ];

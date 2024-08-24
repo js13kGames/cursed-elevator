@@ -46,13 +46,13 @@ W = {
 			'#version 300 es\n' +
 			'precision highp float;' +
 			// Vertex attributes: position, color, texture coordinates, normal (if any)
-			'in vec4 pos, col, uv, normal;' +
+			'in vec4 pos, col, uv;' +
 			// Uniform transformation matrices: projection * view, eye, model, inverse model
 			'uniform mat4 pv, eye, m, im;' +
 			// If the current shape is a billboard: bb = [w, h, 1.0, 0.0]
 			'uniform vec4 bb;' +
 			// Varyings sent to the fragment shader: position, color, texture coordinates, normal (if any)
-			'out vec4 v_pos, v_col, v_uv, v_normal;' +
+			'out vec4 v_pos, v_col, v_uv;' +
 
 			'void main() {' +
 				'gl_Position = pv * (' +
@@ -62,7 +62,6 @@ W = {
 				');' +
 				'v_col = col;' +
 				'v_uv = uv;' +
-				'v_normal = transpose(inverse(m)) * normal;' +
 			'}'
 		);
 
@@ -82,27 +81,37 @@ W = {
 			'#version 300 es\n' +
 			'precision highp float;' +
 			// Received from the vertex shader: position, color, texture coordinates, normal (if any)
-			'in vec4 v_pos, v_col, v_uv, v_normal;' +
+			'in vec4 v_pos, v_col, v_uv;' +
 			// light position
 			'uniform vec3 light;' +
-			// options [0: smooth, 1: shading enabled, 2: ambient, 3: mix]
+			// options [0: shininess, 1: shading enabled, 2: ambient, 3: mix]
 			'uniform vec4 o;' +
 			'uniform sampler2D sampler;' +
 			// Output: final fragment color
 			'out vec4 c;' +
 
 			'void main() {' +
+				// Ambient color
+				'float ambient = o[2];' +
+
+				// Lambert lighting
 				'vec3 light_dir = normalize(light - v_pos.xyz);' +
+				'vec3 normal = normalize(cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz)));' +
+				'float lambert = max(0., dot(light_dir, normal)) * 0.7;' +
+
+				// Specular lighting
+				'float specular = 0.;' +
+
+				'if(o[0] > 0.) {' +
+					'vec3 R = reflect(-light_dir, normal);' +
+					'vec3 V = normalize(-v_pos.xyz);' +
+					'float specAngle = max(dot(R, V), 0.);' +
+					'specular = pow(specAngle, o[0]) * 0.3;' +
+				'}' +
+
+				// Texture and final color
 				'c = mix(texture(sampler, v_uv.xy), v_col, o[3]);' +
-				'c = vec4(' +
-					'c.rgb * (max(0., dot(light_dir, normalize(' +
-						'o[0] > 0.' + // is smoothing enabled
-						'? vec3(v_normal.xyz)' + // smooth normal
-						': cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz))' + // flat normal
-					')))' +
-					'+ o[2]),' + // add ambient light
-					'c.a' +
-				');' +
+				'c = vec4(c.rgb * (ambient + lambert + specular), c.a);' +
 			'}'
 		);
 
@@ -379,8 +388,14 @@ W = {
 			W.gl.uniform1i( W.gl.getUniformLocation( W.program, 'sampler' ), 0 );
 		}
 
+		// Remove finished animation
+		if( object.f >= object.a ) {
+			object.onAnimDone?.();
+			delete object.a;
+			delete object.onAnimDone;
+		}
 		// If the object has an animation, increment its timer...
-		if( object.f < object.a ) { object.f += dt; }
+		else if( object.f < object.a ) { object.f += dt; }
 
 		// ...but don't let it go over the animation duration.
 		if( object.f > object.a ) { object.f = object.a; }
@@ -434,24 +449,24 @@ W = {
 				W.gl.enableVertexAttribArray( buffer );
 			}
 
-			// Set the normals buffer
-			if(
-				( object.s || W.models[object.type].customNormals ) &&
-				W.models[object.type].normalsBuffer
-			) {
-				W.gl.bindBuffer( 34962 /* ARRAY_BUFFER */, W.models[object.type].normalsBuffer );
-				W.gl.vertexAttribPointer(
-					buffer = W.gl.getAttribLocation( W.program, 'normal' ),
-					3, 5126 /* FLOAT */, false, 0, 0
-				);
-				W.gl.enableVertexAttribArray( buffer );
-			}
+			// // Set the normals buffer
+			// if(
+			// 	( object.s || W.models[object.type].customNormals ) &&
+			// 	W.models[object.type].normalsBuffer
+			// ) {
+			// 	W.gl.bindBuffer( 34962 /* ARRAY_BUFFER */, W.models[object.type].normalsBuffer );
+			// 	W.gl.vertexAttribPointer(
+			// 		buffer = W.gl.getAttribLocation( W.program, 'normal' ),
+			// 		3, 5126 /* FLOAT */, false, 0, 0
+			// 	);
+			// 	W.gl.enableVertexAttribArray( buffer );
+			// }
 
 			// Other options: [smooth, shading enabled, ambient light, texture/color mix]
 			W.gl.uniform4f(
 				W.gl.getUniformLocation( W.program, 'o' ),
 
-				// Enable smooth shading if "s" is true
+				// Specular shininess, 0 to disable
 				object.s,
 
 				// Enable shading if in TRIANGLE* mode and object.ns disabled
