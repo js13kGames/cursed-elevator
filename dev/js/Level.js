@@ -1,6 +1,12 @@
 'use strict';
 
 
+js13k.SCENE = {
+	TITLE: 1,
+	INTRO: 2,
+	NORMAL: 3,
+};
+
 js13k.STATE = {
 	OPEN: 1,
 	OPENING: 2,
@@ -20,6 +26,7 @@ js13k.Level = class {
 		this.timer = 0;
 		this._lastCheck = 0;
 
+		this.scene = js13k.SCENE.TITLE;
 		this.states = {
 			doors: js13k.STATE.OPEN,
 		};
@@ -29,6 +36,17 @@ js13k.Level = class {
 		this._evZ = 2;
 
 		W.light( { 'y': this._evY / 2 - 0.2 } );
+
+		W.plane( {
+			'n': 'title',
+			'x': 0,
+			'y': 0,
+			'z': -2,
+			'w': 1,
+			'h': 0.2,
+			'b': 'f00',
+			't': js13k.Assets.textures.title,
+		} );
 
 		this._buildElevatorWalls();
 		this._buildElevatorDoors();
@@ -285,97 +303,9 @@ js13k.Level = class {
 
 	/**
 	 *
-	 * @returns {boolean}
+	 * @private
 	 */
-	doorsInMotion() {
-		return [
-			js13k.STATE.CLOSING,
-			js13k.STATE.OPENING,
-		].includes( this.states.doors );
-	}
-
-
-	/**
-	 *
-	 */
-	doorsClose() {
-		if( this.states.doors == js13k.STATE.CLOSED || this.doorsInMotion() ) {
-			return;
-		}
-
-		this.states.doors = js13k.STATE.CLOSING;
-
-		W.move( { 'n': 'dl', 'x': -this._rightDoorClosed, 'a': 1000 } );
-		W.move( {
-			'n': 'dr',
-			'x': this._rightDoorClosed,
-			'a': 1000,
-			'onAnimDone': () => {
-				this.states.doors = js13k.STATE.CLOSED;
-			},
-		} );
-	}
-
-
-	/**
-	 *
-	 */
-	doorsOpen() {
-		if( this.states.doors == js13k.STATE.OPEN || this.doorsInMotion() ) {
-			return;
-		}
-
-		this.states.doors = js13k.STATE.OPENING;
-
-		W.move( { 'n': 'dl', 'x': -this._rightDoorOpen, 'a': 1000 } );
-		W.move( {
-			'n': 'dr',
-			'x': this._rightDoorOpen,
-			'a': 1000,
-			'onAnimDone': () => {
-				this.states.doors = js13k.STATE.OPEN;
-			},
-		} );
-	}
-
-
-	/**
-	 *
-	 * @param {object} o
-	 * @param {string} o.n
-	 */
-	handleSelected( o ) {
-		if( !o ) {
-			return;
-		}
-
-		console.debug( o.n, o ); // TODO: remove
-
-		if( o.n.includes( 'btn' ) ) {
-			js13k.Audio.play( js13k.Audio.BUTTON );
-			this.doorsClose();
-		}
-	}
-
-
-	/**
-	 *
-	 */
-	selectObject() {
-		if( this._lastSelectable ) {
-			const o = W.next[this._lastSelectable.n];
-			this.handleSelected( o );
-		}
-	}
-
-
-	/**
-	 *
-	 * @param {number} dt
-	 */
-	update( dt ) {
-		this.timer += dt;
-
+	_checkSelections() {
 		// Only check objects every 50 ms
 		if( this.timer - this._lastCheck > 0.05 * js13k.TARGET_FPS ) {
 			this._lastCheck = this.timer;
@@ -420,6 +350,197 @@ js13k.Level = class {
 			js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true )
 		) {
 			this.selectObject();
+		}
+	}
+
+
+	/**
+	 *
+	 * @returns {boolean}
+	 */
+	doorsInMotion() {
+		return [
+			js13k.STATE.CLOSING,
+			js13k.STATE.OPENING,
+		].includes( this.states.doors );
+	}
+
+
+	/**
+	 *
+	 */
+	doorsClose() {
+		if( this.states.doors == js13k.STATE.CLOSED || this.doorsInMotion() ) {
+			return;
+		}
+
+		this.states.doors = js13k.STATE.CLOSING;
+
+		W.move( { 'n': 'dl', 'x': -this._rightDoorClosed, 'a': 2000 } );
+		W.move( {
+			'n': 'dr',
+			'x': this._rightDoorClosed,
+			'a': 2000,
+			'onAnimDone': () => {
+				this.states.doors = js13k.STATE.CLOSED;
+			},
+		} );
+	}
+
+
+	/**
+	 *
+	 */
+	doorsOpen() {
+		if( this.states.doors == js13k.STATE.OPEN || this.doorsInMotion() ) {
+			return;
+		}
+
+		this.states.doors = js13k.STATE.OPENING;
+
+		W.move( { 'n': 'dl', 'x': -this._rightDoorOpen, 'a': 2000 } );
+		W.move( {
+			'n': 'dr',
+			'x': this._rightDoorOpen,
+			'a': 2000,
+			'onAnimDone': () => {
+				this.states.doors = js13k.STATE.OPEN;
+			},
+		} );
+	}
+
+
+	/**
+	 *
+	 * @param {object} o
+	 * @param {string} o.n
+	 */
+	handleSelected( o ) {
+		if( !o ) {
+			return;
+		}
+
+		console.debug( o.n, o ); // TODO: remove
+
+		if( o.n.includes( 'btn' ) ) {
+			js13k.Audio.play( js13k.Audio.BUTTON );
+			this.doorsClose();
+		}
+	}
+
+
+	/**
+	 *
+	 * @returns {boolean} True when finished.
+	 */
+	playIntro() {
+		js13k.Renderer.cameraLocked = true;
+		this._sceneStart = this._sceneStart || this.timer;
+
+		const progress = ( this.timer - this._sceneStart ) / ( 3 * js13k.TARGET_FPS );
+
+		if( progress == 0 ) {
+			this.doorsClose();
+		}
+
+		const cam = {
+			'z': 0,
+			'rx': 0,
+			'ry': 0,
+		};
+
+		if( progress > 1 ) {
+			W.camera( cam );
+			js13k.Renderer.cameraLocked = false;
+
+			// Show pointer
+			document.getElementById( 'p' ).hidden = false;
+
+			delete W.next.title;
+			delete W.current.title;
+
+			return true;
+		}
+
+		// End on a smoother stop in the animation
+		cam.z = -0.5 * ( 1 - Math.sin( progress * Math.PI / 2 ) );
+		W.camera( cam );
+
+		return false;
+	}
+
+
+	/**
+	 *
+	 */
+	playTitle() {
+		js13k.Renderer.cameraLocked = true;
+		this._sceneStart = this._sceneStart || this.timer;
+
+		const progress = ( this.timer - this._sceneStart ) / ( 3 * js13k.TARGET_FPS );
+
+		if( progress == 0 ) {
+			// Hide pointer
+			document.getElementById( 'p' ).hidden = true;
+		}
+
+		if( progress >= 1 ) {
+			return true;
+		}
+
+		W.camera( { 'z': -0.5, 'rx': 0, 'ry': 0 } );
+
+		return false;
+	}
+
+
+	/**
+	 *
+	 */
+	selectObject() {
+		if( this._lastSelectable ) {
+			const o = W.next[this._lastSelectable.n];
+			this.handleSelected( o );
+		}
+	}
+
+
+	/**
+	 *
+	 * @param {js13k.SCENE} scene 
+	 */
+	setScene( scene ) {
+		this._sceneStart = 0;
+		this.scene = scene;
+	}
+
+
+	/**
+	 *
+	 * @param {number} dt
+	 */
+	update( dt ) {
+		this.timer += dt;
+
+		let canInteract = true;
+
+		if( this.scene == js13k.SCENE.TITLE ) {
+			if( this.playTitle() ) {
+				this.setScene( js13k.SCENE.INTRO );
+			}
+
+			canInteract = false;
+		}
+		else if( this.scene == js13k.SCENE.INTRO ) {
+			if( this.playIntro() ) {
+				this.setScene( js13k.SCENE.NORMAL );
+			}
+
+			canInteract = false;
+		}
+
+		if( canInteract ) {
+			this._checkSelections();
 		}
 	}
 

@@ -10,6 +10,7 @@ js13k.Renderer = {
 		rx: 0,
 		ry: 0,
 	},
+	cameraLocked: true,
 	defaultCamDir: new DOMPoint( 0, 0, -1 ),
 	timer: 0,
 
@@ -271,43 +272,11 @@ js13k.Renderer = {
 
 
 	/**
-	 * To be used in `requestAnimationFrame` callback.
-	 * @param {number} [timestamp = 0]
-	 */
-	update( timestamp = 0 ) {
-		if( timestamp && this.last ) {
-			const timeElapsed = timestamp - this.last; // Time that passed between frames. [ms]
-
-			// Target speed of 60 FPS (=> 1000 / 60 ~= 16.667 [ms]).
-			const dt = timeElapsed / ( 1000 / js13k.TARGET_FPS );
-
-			this.ctxUI.clearRect( 0, 0, this.cnvUI.width, this.cnvUI.height );
-			this.ctxUI.imageSmoothingEnabled = false;
-
-			// Draw FPS info
-			this.ctxUI.fillStyle = '#fff';
-			this.ctxUI.font = '11px monospace';
-			this.ctxUI.textAlign = 'left';
-			this.ctxUI.fillText( ~~( js13k.TARGET_FPS / dt ) + ' FPS', 10, 20 );
-
-			if( this.isPaused ) {
-				this.drawPause();
-				return;
-			}
-
-			this.timer += dt;
-			this.level.update( dt );
-		}
-
-		this.last = timestamp;
-	},
-
-
-	/**
 	 *
 	 */
 	pause() {
 		this.isPaused = true;
+		document.body.classList.add( 'p' );
 		W.isPaused = true;
 	},
 
@@ -344,7 +313,7 @@ js13k.Renderer = {
 		} );
 
 		this.cnv.addEventListener( 'mousemove', ev => {
-			if( !this.level || this.isPaused ) {
+			if( !this.level || this.isPaused || this.cameraLocked ) {
 				return;
 			}
 
@@ -369,6 +338,10 @@ js13k.Renderer = {
 
 		// Reset camera
 		js13k.Input.onKeyUp( 'KeyR', () => {
+			if( this.cameraLocked ) {
+				return;
+			}
+
 			this.camera.rx = 0;
 			this.camera.ry = 0;
 			W.camera( this.camera );
@@ -380,14 +353,29 @@ js13k.Renderer = {
 	 * Resize the canvas.
 	 */
 	resize() {
-		let width = 1200;
-		let height = 900;
+		const ratio = 4 / 3;
+		let width = window.innerWidth;
+		let height = window.innerHeight;
+
+		if( width > height ) {
+			height -= 40;
+			width = Math.round( Math.min( width, height * ratio ) );
+		}
+		else if( width < height ) {
+			width -= 40;
+			height = Math.round( Math.min( height, width * ratio ) );
+		}
 
 		this.cnv.width = width;
 		this.cnv.height = height;
 
 		this.cnvUI.width = width;
 		this.cnvUI.height = height;
+
+		if( W.next?.camera ) {
+			W.camera( { 'fov': W.next.camera.fov } ); // Trigger re-calculation of projection matrix
+			W.gl.viewport( 0, 0, width, height );
+		}
 	},
 
 
@@ -404,7 +392,41 @@ js13k.Renderer = {
 	 */
 	unpause() {
 		this.isPaused = false;
+		document.body.classList.remove( 'p' );
 		W.isPaused = false;
+	},
+
+
+	/**
+	 * To be used in `requestAnimationFrame` callback.
+	 * @param {number} [timestamp = 0]
+	 */
+	update( timestamp = 0 ) {
+		if( timestamp && this.last ) {
+			const timeElapsed = timestamp - this.last; // Time that passed between frames. [ms]
+
+			// Target speed of 60 FPS (=> 1000 / 60 ~= 16.667 [ms]).
+			const dt = timeElapsed / ( 1000 / js13k.TARGET_FPS );
+
+			this.ctxUI.clearRect( 0, 0, this.cnvUI.width, this.cnvUI.height );
+			this.ctxUI.imageSmoothingEnabled = false;
+
+			// Draw FPS info
+			this.ctxUI.fillStyle = '#fff';
+			this.ctxUI.font = '11px monospace';
+			this.ctxUI.textAlign = 'left';
+			this.ctxUI.fillText( ~~( js13k.TARGET_FPS / dt ) + ' FPS', 10, 20 );
+
+			if( this.isPaused ) {
+				this.drawPause();
+				return;
+			}
+
+			this.timer += dt;
+			this.level.update( dt );
+		}
+
+		this.last = timestamp;
 	},
 
 

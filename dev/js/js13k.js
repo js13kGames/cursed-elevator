@@ -11,7 +11,9 @@ const js13k = {
 	// Config
 	FONT_SANS: 'Arial, sans-serif',
 	FONT_SERIF: '"Times New Roman", serif',
+	FOV: 30,
 	TARGET_FPS: 60,
+	TITLE: 'Triskaidekaphobia',
 
 
 	/**

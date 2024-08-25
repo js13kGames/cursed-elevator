@@ -62,9 +62,28 @@ js13k.Assets = {
 
 	/**
 	 *
+	 * @private
+	 */
+	_createTitle() {
+		const w = 600;
+		const h = w * 0.2;
+
+		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, 'title' );
+		ctx.fillStyle = '#f00';
+		ctx.font = '600 64px ' + js13k.FONT_SANS;
+		ctx.textAlign = 'center';
+		ctx.fillText( js13k.TITLE, w / 2, h / 2 );
+
+		this.textures.title = cnv;
+	},
+
+
+	/**
+	 *
 	 * @param {function} cb
 	 */
 	loadAll( cb ) {
+		this._createTitle();
 		this._createButtonLabels();
 		this._createSurfaces();
 		cb();

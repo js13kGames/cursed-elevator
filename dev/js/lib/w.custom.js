@@ -357,7 +357,7 @@ W = {
 		for( i of transparent ) {
 			// Disable depth buffer write if it's a plane or a billboard to allow transparent objects to intersect planes more easily
 			if( ['plane', 'billboard'].includes( i.type ) ) {
-				W.gl.depthMask(0);
+				W.gl.depthMask( 0 );
 			}
 
 			W.render( i, dt );
