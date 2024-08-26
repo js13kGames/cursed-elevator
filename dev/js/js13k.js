@@ -9,6 +9,7 @@ const js13k = {
 
 
 	// Config
+	FONT_MONO: '"Courier New", monospace',
 	FONT_SANS: 'Arial, sans-serif',
 	FONT_SERIF: '"Times New Roman", serif',
 	FOV: 30,

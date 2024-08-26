@@ -80,6 +80,28 @@ js13k.Assets = {
 
 	/**
 	 *
+	 * @param {number|string} text
+	 * @returns {HTMLCanvasElement}
+	 */
+	getDisplayTexture( text ) {
+		const w = 200;
+		const h = w / 2;
+
+		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, 'dis:' + text );
+		ctx.fillStyle = '#f00';
+		ctx.fillRect( 0, 0, w, h );
+		ctx.fillStyle = '#fff';
+		ctx.font = '600 64px ' + js13k.FONT_MONO;
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
+		ctx.fillText( String( text ), w / 2, h / 2 + 6 );
+
+		return cnv;
+	},
+
+
+	/**
+	 *
 	 * @param {function} cb
 	 */
 	loadAll( cb ) {

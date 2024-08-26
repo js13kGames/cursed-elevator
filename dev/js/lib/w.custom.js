@@ -161,7 +161,7 @@ W = {
 		}
 
 		// If a new texture is provided, build it and save it in W.textures
-		if( state.t && state.t.width && !W.textures[state.t.id] ){
+		if( state.t && state.t.width && !W.textures[state.t.id] ) {
 			texture = W.gl.createTexture();
 			W.gl.pixelStorei( 37441 /* UNPACK_PREMULTIPLY_ALPHA_WEBGL */, true );
 			W.gl.bindTexture( 3553 /* TEXTURE_2D */, texture );

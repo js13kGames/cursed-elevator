@@ -48,6 +48,7 @@ js13k.Level = class {
 			't': js13k.Assets.textures.title,
 		} );
 
+		W.group( { 'n': 'ev' } );
 		this._buildElevatorWalls();
 		this._buildElevatorDoors();
 		this._buildElevatorDisplay();
@@ -66,6 +67,7 @@ js13k.Level = class {
 
 		W.group( {
 			'n': g,
+			'g': 'ev',
 			'y': this._evY / 2 - h - 0.15,
 			'z': -this._evZ / 2 + 0.06,
 		} );
@@ -73,6 +75,7 @@ js13k.Level = class {
 		// base plate
 		W.plane( {
 			'g': g,
+			'n': 'dis',
 			'w': w,
 			'h': h,
 			'b': 'f00',
@@ -93,6 +96,7 @@ js13k.Level = class {
 		// Left door
 		W.cube( {
 			'n': 'dl',
+			'g': 'ev',
 			'x': -this._rightDoorOpen,
 			'y': 0,
 			'z': -this._evZ / 2,
@@ -106,6 +110,7 @@ js13k.Level = class {
 		// Right door
 		W.cube( {
 			'n': 'dr',
+			'g': 'ev',
 			'x': this._rightDoorOpen,
 			'y': 0,
 			'z': -this._evZ / 2,
@@ -130,6 +135,7 @@ js13k.Level = class {
 		// Group: number pad
 		W.group( {
 			'n': g,
+			'g': 'ev',
 			'x': this._evX / 2 - w / 2 - 0.06,
 			'y': -h / 2 + 0.075,
 			'z': -this._evZ / 2 + 0.06,
@@ -187,7 +193,7 @@ js13k.Level = class {
 		const g = 'ev';
 
 		// Group: elevator base
-		W.group( { 'n': g } );
+		W.group( { 'n': g, 'g': 'ev' } );
 		// floor
 		W.plane( {
 			'g': g,
@@ -502,6 +508,19 @@ js13k.Level = class {
 			const o = W.next[this._lastSelectable.n];
 			this.handleSelected( o );
 		}
+	}
+
+
+	/**
+	 *
+	 * @param {number|string} text
+	 */
+	setDisplay( text ) {
+		W.move( {
+			'n': 'dis',
+			't': js13k.Assets.getDisplayTexture( text ),
+			'mix': 0.25,
+		} );
 	}
 
 

@@ -308,6 +308,10 @@ js13k.Renderer = {
 		} );
 
 		this.cnv.addEventListener( 'mouseenter', ev => {
+			if( !this.level || this.cameraLocked ) {
+				return;
+			}
+
 			mouseLastX = ev.clientX;
 			mouseLastY = ev.clientY;
 		} );
@@ -373,7 +377,8 @@ js13k.Renderer = {
 		this.cnvUI.height = height;
 
 		if( W.next?.camera ) {
-			W.camera( { 'fov': W.next.camera.fov } ); // Trigger re-calculation of projection matrix
+			// Trigger re-calculation of projection matrix
+			W.camera( { 'fov': W.next.camera.fov } );
 			W.gl.viewport( 0, 0, width, height );
 		}
 	},
