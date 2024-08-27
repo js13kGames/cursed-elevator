@@ -89,6 +89,7 @@ js13k.Level = class {
 	 */
 	_buildElevatorDoors() {
 		const doorWidth = this._evX / 2;
+		const doorDepth = 0.05;
 
 		this._rightDoorClosed = doorWidth / 2 + 0.0025; // leave a very small gap open
 		this._rightDoorOpen = this._rightDoorClosed + this._evX / 2 - this._evX / 4;
@@ -102,23 +103,42 @@ js13k.Level = class {
 			'z': -this._evZ / 2,
 			'w': doorWidth,
 			'h': this._evY,
-			'd': 0.05,
+			'd': doorDepth,
 			'b': 'aaa',
 			's': 20,
+		} );
+
+		W.group( {
+			'n': 'drg',
+			'g': 'ev',
+			'x': this._rightDoorOpen,
+			'y': 0,
+			'z': -this._evZ / 2,
 		} );
 
 		// Right door
 		W.cube( {
 			'n': 'dr',
-			'g': 'ev',
-			'x': this._rightDoorOpen,
-			'y': 0,
-			'z': -this._evZ / 2,
+			'g': 'drg',
 			'w': doorWidth,
 			'h': this._evY,
-			'd': 0.05,
+			'd': doorDepth,
 			'b': 'aaa',
 			's': 20,
+		} );
+
+		const noteWidth = doorWidth / 4;
+
+		W.plane( {
+			'n': 's_note1',
+			'g': 'drg',
+			'x': ( noteWidth - doorWidth ) / 2 + 0.1,
+			'y': -0.1,
+			'z': doorDepth / 2 + 0.001,
+			'w': noteWidth,
+			'h': noteWidth * 1.414, // 297 / 210 ~= 1.414
+			'rz': -10,
+			't': js13k.Assets.textures.paper,
 		} );
 	}
 
@@ -319,27 +339,30 @@ js13k.Level = class {
 			const hit = js13k.Renderer.checkSelectables();
 
 			if( hit && hit.n != this._lastSelectable?.hit ) {
+				let key = hit.n;
+
 				// Highlight button
-				if( hit.n.startsWith( 's_lbl_btn' ) ) {
-					const btnN = hit.n.substring( 6 );
-					const btn = W.next[btnN];
+				if( key.startsWith( 's_lbl_btn' ) ) {
+					key = key.substring( 6 ); // remove "s_lbl_"
+				}
 
-					if( btn ) {
-						if( this._lastSelectable ) {
-							W.move( {
-								'n': this._lastSelectable.n,
-								'b': this._lastSelectable.b,
-							} );
-						}
+				const target = W.next[key];
 
-						this._lastSelectable = {
-							hit: hit.n,
-							'n': btnN,
-							'b': btn.b,
-						};
-
-						W.move( { 'n': btnN, 'b': 'fff' } );
+				if( target ) {
+					if( this._lastSelectable ) {
+						W.move( {
+							'n': this._lastSelectable.n,
+							'b': this._lastSelectable.b,
+						} );
 					}
+
+					this._lastSelectable = {
+						hit: hit.n,
+						'n': key,
+						'b': target.b,
+					};
+
+					W.move( { 'n': key, 'b': 'fff' } );
 				}
 			}
 			else if( !hit && this._lastSelectable ) {
@@ -347,6 +370,7 @@ js13k.Level = class {
 					'n': this._lastSelectable.n,
 					'b': this._lastSelectable.b,
 				} );
+
 				this._lastSelectable = null;
 			}
 		}
@@ -384,7 +408,7 @@ js13k.Level = class {
 
 		W.move( { 'n': 'dl', 'x': -this._rightDoorClosed, 'a': 2000 } );
 		W.move( {
-			'n': 'dr',
+			'n': 'drg',
 			'x': this._rightDoorClosed,
 			'a': 2000,
 			'onAnimDone': () => {
@@ -406,7 +430,7 @@ js13k.Level = class {
 
 		W.move( { 'n': 'dl', 'x': -this._rightDoorOpen, 'a': 2000 } );
 		W.move( {
-			'n': 'dr',
+			'n': 'drg',
 			'x': this._rightDoorOpen,
 			'a': 2000,
 			'onAnimDone': () => {

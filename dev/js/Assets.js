@@ -15,20 +15,35 @@ js13k.Assets = {
 	 * @private
 	 */
 	_createButtonLabels() {
-		const w = 50;
-		const h = 35;
+		const w = 100;
+		const h = 70;
 
 		for( let i = 0; i < 14; i++ ) {
 			const key = 's_lbl_btn' + i;
 
 			const [canvas, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
-			ctx.font = '600 18px ' + js13k.FONT_SANS;
+			ctx.font = '600 32px ' + js13k.FONT_SANS;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
 			ctx.fillText( String( i + 1 ).padStart( 2, '0' ), w / 2, h / 2 + 2 );
 
 			this.textures[key] = canvas;
 		}
+	},
+
+
+	/**
+	 *
+	 * @private
+	 */
+	_createItems() {
+		// Ratio is close to DIN A4 (210 / 297)
+		const w = 50;
+		const h = Math.round( w * 1.414 );
+
+		const cnvPaper = js13k.Renderer.getOffscreenCanvas( w, h, 'paper' )[0];
+		pxtex( cnvPaper, 0, 0, 95, 3, w, h );
+		this.textures.paper = cnvPaper;
 	},
 
 
@@ -66,7 +81,7 @@ js13k.Assets = {
 	 */
 	_createTitle() {
 		const w = 600;
-		const h = w * 0.2;
+		const h = Math.round( w * 0.2 );
 
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, 'title' );
 		ctx.fillStyle = '#f00';
@@ -85,7 +100,7 @@ js13k.Assets = {
 	 */
 	getDisplayTexture( text ) {
 		const w = 200;
-		const h = w / 2;
+		const h = Math.round( w / 2 );
 
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, 'dis:' + text );
 		ctx.fillStyle = '#f00';
@@ -108,6 +123,7 @@ js13k.Assets = {
 		this._createTitle();
 		this._createButtonLabels();
 		this._createSurfaces();
+		this._createItems();
 		cb();
 	},
 
