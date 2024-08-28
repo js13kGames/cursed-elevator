@@ -62,6 +62,8 @@ js13k.Level = class {
 		this._buildElevatorDoors();
 		this._buildElevatorDisplay();
 		this._buildElevatorNumberPad();
+
+		this.setDisplay( this.states.floorCurrent );
 	}
 
 
