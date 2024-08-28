@@ -5,13 +5,18 @@ js13k.SCENE = {
 	TITLE: 1,
 	INTRO: 2,
 	NORMAL: 3,
+	ELEVATOR_MOVING: 4,
 };
 
 js13k.STATE = {
+	// Doors
 	OPEN: 1,
 	OPENING: 2,
 	CLOSED: 3,
 	CLOSING: 4,
+	// Elevator
+	IDLE: 5,
+	MOVING: 6,
 };
 
 
@@ -29,6 +34,10 @@ js13k.Level = class {
 		this.scene = js13k.SCENE.TITLE;
 		this.states = {
 			doors: js13k.STATE.OPEN,
+			elevator: js13k.STATE.IDLE,
+			floorCurrent: 1,
+			floorNext: 1,
+			note: null,
 		};
 
 		this._evX = 2;
@@ -177,7 +186,7 @@ js13k.Level = class {
 		const offsetY = 6 * ( btnH + padding ) / 2;
 
 		for( let i = 0; i < 14; i++ ) {
-			const n = 'btn' + i;
+			const n = 'btn' + ( i + 1 );
 			const x = ( i % 2 ) * ( padding + btnW ) - offsetX;
 			const y = ~~( i / 2 ) * ( padding + btnH ) - offsetY;
 
@@ -386,6 +395,19 @@ js13k.Level = class {
 
 	/**
 	 *
+	 */
+	clicked() {
+		if( this.states.note ) {
+			this.states.note = null;
+		}
+		else {
+			this.selectObject();
+		}
+	}
+
+
+	/**
+	 *
 	 * @returns {boolean}
 	 */
 	doorsInMotion() {
@@ -398,9 +420,11 @@ js13k.Level = class {
 
 	/**
 	 *
+	 * @param {function?} cb
 	 */
-	doorsClose() {
+	doorsClose( cb ) {
 		if( this.states.doors == js13k.STATE.CLOSED || this.doorsInMotion() ) {
+			cb?.();
 			return;
 		}
 
@@ -413,6 +437,7 @@ js13k.Level = class {
 			'a': 2000,
 			'onAnimDone': () => {
 				this.states.doors = js13k.STATE.CLOSED;
+				cb?.();
 			},
 		} );
 	}
@@ -420,9 +445,11 @@ js13k.Level = class {
 
 	/**
 	 *
+	 * @param {function?} cb
 	 */
-	doorsOpen() {
+	doorsOpen( cb ) {
 		if( this.states.doors == js13k.STATE.OPEN || this.doorsInMotion() ) {
+			cb?.();
 			return;
 		}
 
@@ -435,6 +462,7 @@ js13k.Level = class {
 			'a': 2000,
 			'onAnimDone': () => {
 				this.states.doors = js13k.STATE.OPEN;
+				cb?.();
 			},
 		} );
 	}
@@ -450,12 +478,75 @@ js13k.Level = class {
 			return;
 		}
 
-		console.debug( o.n, o ); // TODO: remove
-
-		if( o.n.includes( 'btn' ) ) {
-			js13k.Audio.play( js13k.Audio.BUTTON );
-			this.doorsClose();
+		if( o.n.startsWith( 's_note' ) ) {
+			this.states.note = o.n;
 		}
+		else if( o.n.startsWith( 'btn' ) ) {
+			if( this.states.elevator == js13k.STATE.IDLE ) {
+				js13k.Audio.play( js13k.Audio.BUTTON );
+
+				this.states.floorNext = Number( o.n.substring( 3 ) );
+
+				// Same floor
+				if( this.states.floorCurrent == this.states.floorNext ) {
+					this.doorsClose();
+					return;
+				}
+
+				this.states.elevator = js13k.STATE.MOVING;
+
+				this.doorsClose( () => {
+					this.setScene( js13k.SCENE.ELEVATOR_MOVING );
+				} );
+			}
+		}
+	}
+
+
+	/**
+	 *
+	 * @returns {boolean} True when finished.
+	 */
+	playElevatorMoving() {
+		this._sceneStart = this._sceneStart || this.timer;
+
+		// Moving from 1 floor to the next takes 1.25 second.
+		// Multiple floors take longer.
+		const floorDiff = this.states.floorNext - this.states.floorCurrent;
+		const duration = 1.25 * Math.abs( floorDiff ) * js13k.TARGET_FPS;
+		const progress = ( this.timer - this._sceneStart ) / duration;
+
+		if( progress == 0 ) {
+			this._camStart = {
+				'x': W.next.camera.x,
+				'y': W.next.camera.y,
+				'z': W.next.camera.z,
+			};
+		}
+
+		this.setDisplay( this.states.floorCurrent + Math.floor( progress * floorDiff ) );
+
+		if( progress > 1 ) {
+			W.camera( this._camStart );
+			js13k.Audio.play( js13k.Audio.DING );
+
+			this.states.floorCurrent = this.states.floorNext;
+
+			this.doorsOpen( () => {
+				this.states.elevator = js13k.STATE.IDLE;
+			} );
+
+			return true;
+		}
+
+		// Screen shake
+		W.camera( {
+			'x': this._camStart.x + ( Math.random() * 2 - 1 ) / 300,
+			'y': this._camStart.y + ( Math.random() * 2 - 1 ) / 300,
+			'z': this._camStart.z + ( Math.random() * 2 - 1 ) / 300,
+		} );
+
+		return false;
 	}
 
 
@@ -466,7 +557,6 @@ js13k.Level = class {
 	playIntro() {
 		js13k.Renderer.cameraLocked = true;
 		this._sceneStart = this._sceneStart || this.timer;
-
 		const progress = ( this.timer - this._sceneStart ) / ( 3 * js13k.TARGET_FPS );
 
 		if( progress == 0 ) {
@@ -506,7 +596,6 @@ js13k.Level = class {
 	playTitle() {
 		js13k.Renderer.cameraLocked = true;
 		this._sceneStart = this._sceneStart || this.timer;
-
 		const progress = ( this.timer - this._sceneStart ) / ( 3 * js13k.TARGET_FPS );
 
 		if( progress == 0 ) {
@@ -581,8 +670,21 @@ js13k.Level = class {
 
 			canInteract = false;
 		}
+		else if( this.scene == js13k.SCENE.ELEVATOR_MOVING ) {
+			if( this.playElevatorMoving() ) {
+				this.setScene( js13k.SCENE.NORMAL );
+			}
+		}
 
-		if( canInteract ) {
+		if( this.states.note ) {
+			const text = js13k.Assets.texts[this.states.note];
+			js13k.Renderer.drawNote( text );
+
+			if( js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true ) ) {
+				this.states.note = null;
+			}
+		}
+		else if( canInteract && this.states.elevator == js13k.STATE.IDLE ) {
 			this._checkSelections();
 		}
 	}

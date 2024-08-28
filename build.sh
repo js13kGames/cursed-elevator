@@ -36,7 +36,6 @@ terser \
 	'Input.js' \
 	'Renderer.js' \
 	'Level.js' \
-	'Timer.js' \
 	--ecma 12 --warn \
 	--compress --toplevel \
 	--mangle --mangle-props keep_quoted \

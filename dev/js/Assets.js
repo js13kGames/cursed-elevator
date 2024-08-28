@@ -7,6 +7,11 @@
 js13k.Assets = {
 
 
+	texts: {
+		's_note1': `I'm leaving this note for whoever gets lost\nhere as well. You are now stuck in a cursed\nelevator. But if I'm not in here (and neither\nmy dead body), I must've made it out!\n\nDon't worry, I'm going to leave you some\ntips as I figure this situation out!`,
+	},
+
+
 	textures: {},
 
 
@@ -18,14 +23,14 @@ js13k.Assets = {
 		const w = 100;
 		const h = 70;
 
-		for( let i = 0; i < 14; i++ ) {
+		for( let i = 1; i <= 14; i++ ) {
 			const key = 's_lbl_btn' + i;
 
 			const [canvas, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
 			ctx.font = '600 32px ' + js13k.FONT_SANS;
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
-			ctx.fillText( String( i + 1 ).padStart( 2, '0' ), w / 2, h / 2 + 2 );
+			ctx.fillText( String( i ).padStart( 2, '0' ), w / 2, h / 2 + 2 );
 
 			this.textures[key] = canvas;
 		}

@@ -11,6 +11,17 @@ js13k.Renderer = {
 		ry: 0,
 	},
 	cameraLocked: true,
+
+	/** @type {HTMLCanvasElement} */
+	cnv: null,
+	/** @type {HTMLCanvasElement} */
+	cnvUI: null,
+
+	/** @type {CanvasRenderingContext2D} */
+	ctx: null,
+	/** @type {CanvasRenderingContext2D} */
+	ctxUI: null,
+
 	defaultCamDir: new DOMPoint( 0, 0, -1 ),
 	timer: 0,
 
@@ -64,6 +75,31 @@ js13k.Renderer = {
 		}
 
 		return this.getClosest( ray.origin, hits );
+	},
+
+
+	/**
+	 *
+	 * @param {string} text
+	 */
+	drawNote( text ) {
+		const w = 520;
+		const h = Math.round( Math.min( w * 1.414, window.innerHeight - 40 ) );
+
+		const x = ( this.cnvUI.width - w ) / 2;
+		const y = ( this.cnvUI.height - h ) / 2;
+
+		this.ctxUI.drawImage( js13k.Assets.textures.paper, x, y, w, h );
+		this.ctxUI.fillStyle = '#000';
+		this.ctxUI.font = '24px ' + js13k.FONT_SANS;
+		this.ctxUI.textAlign = 'left';
+		this.ctxUI.textBaseline = 'top';
+
+		const lines = text.split( '\n' );
+
+		for( let i = 0; i < lines.length; i++ ) {
+			this.ctxUI.fillText( lines[i], x + 20, y + 20 + i * 29 );
+		}
 	},
 
 
@@ -285,8 +321,8 @@ js13k.Renderer = {
 	 *
 	 */
 	registerEvents() {
-		let mouseLastX = 0;
-		let mouseLastY = 0;
+		let mouseLastX = null;
+		let mouseLastY = null;
 		const camSpeed = 0.5;
 
 		window.addEventListener( 'resize', _ev => this.resize() );
@@ -304,7 +340,7 @@ js13k.Renderer = {
 				return;
 			}
 
-			this.level.selectObject();
+			this.level.clicked();
 		} );
 
 		this.cnv.addEventListener( 'mouseenter', ev => {
