@@ -31,7 +31,7 @@ js13k.Level = class {
 		this.timer = 0;
 		this._lastCheck = 0;
 
-		this.scene = js13k.SCENE.TITLE;
+		this.scene = js13k.SCENE.NORMAL; // TODO: set to TITLE
 		this.states = {
 			doors: js13k.STATE.OPEN,
 			elevator: js13k.STATE.IDLE,
@@ -40,7 +40,7 @@ js13k.Level = class {
 			note: null,
 		};
 
-		this._evX = 2;
+		this._evX = 2.5;
 		this._evY = 3;
 		this._evZ = 2;
 
@@ -48,8 +48,6 @@ js13k.Level = class {
 
 		W.plane( {
 			'n': 'title',
-			'x': 0,
-			'y': 0,
 			'z': -2,
 			'w': 1,
 			'h': 0.2,
@@ -62,6 +60,7 @@ js13k.Level = class {
 		this._buildElevatorDoors();
 		this._buildElevatorDisplay();
 		this._buildElevatorNumberPad();
+		this._buildFloors();
 
 		this.setDisplay( this.states.floorCurrent );
 	}
@@ -103,14 +102,13 @@ js13k.Level = class {
 		const doorDepth = 0.05;
 
 		this._rightDoorClosed = doorWidth / 2 + 0.0025; // leave a very small gap open
-		this._rightDoorOpen = this._rightDoorClosed + this._evX / 2 - this._evX / 4;
+		this._rightDoorOpen = this._rightDoorClosed + this._evX / 2 - this._evX / 3.5;
 
 		// Left door
 		W.cube( {
 			'n': 'dl',
 			'g': 'ev',
 			'x': -this._rightDoorOpen,
-			'y': 0,
 			'z': -this._evZ / 2,
 			'w': doorWidth,
 			'h': this._evY,
@@ -123,7 +121,6 @@ js13k.Level = class {
 			'n': 'drg',
 			'g': 'ev',
 			'x': this._rightDoorOpen,
-			'y': 0,
 			'z': -this._evZ / 2,
 		} );
 
@@ -167,9 +164,9 @@ js13k.Level = class {
 		W.group( {
 			'n': g,
 			'g': 'ev',
-			'x': this._evX / 2 - w / 2 - 0.06,
-			'y': -h / 2 + 0.075,
-			'z': -this._evZ / 2 + 0.06,
+			'x': this._evX / 2 - w,
+			'y': -h / 4,
+			'z': -this._evZ / 2 + 0.051,
 		} );
 
 		// base plate
@@ -225,12 +222,11 @@ js13k.Level = class {
 
 		// Group: elevator base
 		W.group( { 'n': g, 'g': 'ev' } );
+
 		// floor
 		W.plane( {
 			'g': g,
-			'x': 0,
 			'y': -this._evY / 2,
-			'z': 0,
 			'w': this._evX,
 			'h': this._evZ,
 			'rx': -90,
@@ -241,9 +237,7 @@ js13k.Level = class {
 		// ceiling
 		W.plane( {
 			'g': g,
-			'x': 0,
 			'y': this._evY / 2,
-			'z': 0,
 			'w': this._evX,
 			'h': this._evZ,
 			'rx': 90,
@@ -251,12 +245,11 @@ js13k.Level = class {
 			't': js13k.Assets.textures.ceil,
 			'mix': 0.5,
 		} );
+
 		// wall: left
 		W.plane( {
 			'g': g,
 			'x': -this._evX / 2,
-			'y': 0,
-			'z': 0,
 			'ry': 90,
 			'w': this._evZ,
 			'h': this._evY,
@@ -269,8 +262,6 @@ js13k.Level = class {
 		W.plane( {
 			'g': g,
 			'x': this._evX / 2,
-			'y': 0,
-			'z': 0,
 			'ry': -90,
 			'w': this._evZ,
 			'h': this._evY,
@@ -282,8 +273,6 @@ js13k.Level = class {
 		// wall: back
 		W.plane( {
 			'g': g,
-			'x': 0,
-			'y': 0,
 			'z': this._evZ / 2,
 			'ry': 180,
 			'w': this._evX,
@@ -293,13 +282,47 @@ js13k.Level = class {
 			's': 30,
 			'mix': 0.5,
 		} );
+
+		// railing: left
+		W.cube( {
+			'g': g,
+			'x': -this._evX / 2 + 0.02,
+			'y': -this._evY / 5,
+			'w': 0.04,
+			'h': 0.15,
+			'd': this._evZ,
+			'b': 'aaa',
+			's': 30,
+		} );
+		// railing: right
+		W.cube( {
+			'g': g,
+			'x': this._evX / 2 - 0.02,
+			'y': -this._evY / 5,
+			'w': 0.04,
+			'h': 0.15,
+			'd': this._evZ,
+			'b': 'aaa',
+			's': 30,
+		} );
+		// railing: back
+		W.cube( {
+			'g': g,
+			'y': -this._evY / 5,
+			'z': this._evZ / 2 - 0.02,
+			'w': this._evX,
+			'h': 0.15,
+			'd': 0.04,
+			'b': 'aaa',
+			's': 30,
+		} );
+
 		// front, left side
 		W.cube( {
 			'g': g,
-			'x': -( this._evX - this._evX / 5 ) / 2,
-			'y': 0,
+			'x': -( this._evX - this._evX / 4.5 ) / 2,
 			'z': -this._evZ / 2,
-			'w': this._evX / 5,
+			'w': this._evX / 4.5,
 			'h': this._evY,
 			'd': 0.1,
 			'b': '999',
@@ -310,10 +333,9 @@ js13k.Level = class {
 		// front, right side
 		W.cube( {
 			'g': g,
-			'x': ( this._evX - this._evX / 5 ) / 2,
-			'y': 0,
+			'x': ( this._evX - this._evX / 4.5 ) / 2,
 			'z': -this._evZ / 2,
-			'w': this._evX / 5,
+			'w': this._evX / 4.5,
 			'h': this._evY,
 			'd': 0.1,
 			'b': '999',
@@ -324,7 +346,6 @@ js13k.Level = class {
 		// front, top
 		W.cube( {
 			'g': g,
-			'x': 0,
 			'y': ( this._evY - this._evY / 4 ) / 2,
 			'z': -this._evZ / 2,
 			'w': this._evX,
@@ -334,6 +355,23 @@ js13k.Level = class {
 			't': js13k.Assets.textures.ft,
 			's': 30,
 			'mix': 0.5,
+		} );
+	}
+
+
+	/**
+	 *
+	 * @private
+	 */
+	_buildFloors() {
+		W.plane( {
+			'y': -this._evY / 2,
+			'z': -this._evZ / 2 - 10,
+			'w': 30,
+			'h': 20,
+			'rx': 90,
+			'rz': 180,
+			'b': '111',
 		} );
 	}
 
@@ -529,6 +567,8 @@ js13k.Level = class {
 		this.setDisplay( this.states.floorCurrent + Math.floor( progress * floorDiff ) );
 
 		if( progress > 1 ) {
+			this.prepareFloor( this.states.floorNext );
+
 			W.camera( this._camStart );
 			js13k.Audio.play( js13k.Audio.DING );
 
@@ -612,6 +652,15 @@ js13k.Level = class {
 		W.camera( { 'z': -0.5, 'rx': 0, 'ry': 0 } );
 
 		return false;
+	}
+
+
+	/**
+	 *
+	 * @param {number} floor
+	 */
+	prepareFloor( floor ) {
+		// TODO:
 	}
 
 

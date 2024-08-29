@@ -90,7 +90,7 @@ js13k.Assets = {
 
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, 'title' );
 		ctx.fillStyle = '#f00';
-		ctx.font = '600 64px ' + js13k.FONT_SANS;
+		ctx.font = '600 64px ' + js13k.FONT_SERIF;
 		ctx.textAlign = 'center';
 		ctx.fillText( js13k.TITLE, w / 2, h / 2 );
 

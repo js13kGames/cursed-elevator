@@ -10,7 +10,7 @@ js13k.Renderer = {
 		rx: 0,
 		ry: 0,
 	},
-	cameraLocked: true,
+	cameraLocked: false, // TODO: set initially to true
 
 	/** @type {HTMLCanvasElement} */
 	cnv: null,
