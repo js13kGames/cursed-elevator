@@ -182,7 +182,7 @@ W = {
 		if( state.fov ) {
 			const a = 1 / Math.tan( state.fov * Math.PI / 180 );
 			const znear = 0.1;
-			const zfar = 1000;
+			const zfar = 60;
 			const farNearDiff = zfar - znear;
 
 			W.projection = new DOMMatrix( [
@@ -204,7 +204,7 @@ W = {
 					'w': 1, 'h': 1, 'd': 1,
 					'x': 0, 'y': 0, 'z': 0,
 					'rx': 0, 'ry': 0, 'rz': 0,
-					'b': '888', 'mode': 4, 'mix': 0,
+					'b': '888', 'mix': 0,
 				}
 			),
 			...state,
@@ -449,19 +449,6 @@ W = {
 				W.gl.enableVertexAttribArray( buffer );
 			}
 
-			// // Set the normals buffer
-			// if(
-			// 	( object.s || W.models[object.type].customNormals ) &&
-			// 	W.models[object.type].normalsBuffer
-			// ) {
-			// 	W.gl.bindBuffer( 34962 /* ARRAY_BUFFER */, W.models[object.type].normalsBuffer );
-			// 	W.gl.vertexAttribPointer(
-			// 		buffer = W.gl.getAttribLocation( W.program, 'normal' ),
-			// 		3, 5126 /* FLOAT */, false, 0, 0
-			// 	);
-			// 	W.gl.enableVertexAttribArray( buffer );
-			// }
-
 			// Other options: [smooth, shading enabled, ambient light, texture/color mix]
 			W.gl.uniform4f(
 				W.gl.getUniformLocation( W.program, 'o' ),
@@ -469,8 +456,8 @@ W = {
 				// Specular shininess, 0 to disable
 				object.s,
 
-				// Enable shading if in TRIANGLE* mode and object.ns disabled
-				( object.mode > 3 || W.gl[object.mode] > 3 ) && !object.ns ? 1 : 0,
+				// Enable shading if object.ns disabled
+				object.ns ? 0 : 1,
 
 				// Ambient light
 				W.ambientLight || 0.2,
@@ -511,14 +498,14 @@ W = {
 			// You can keep the "drawElements" only if all your models are indexed.
 			if( W.models[object.type].indicesBuffer ) {
 				W.gl.drawElements(
-					+object.mode || W.gl[object.mode],
+					4, // mode: gl.TRIANGLES
 					W.models[object.type].indices.length,
 					5123 /* UNSIGNED_SHORT */, 0
 				);
 			}
 			else {
 				W.gl.drawArrays(
-					+object.mode || W.gl[object.mode],
+					4, // mode: gl.TRIANGLES
 					0,
 					W.models[object.type].vertices.length / 3
 				);
@@ -727,75 +714,3 @@ W.add( 'cube', {
 	]
 } );
 W.cube = settings => W.setState( settings, 'cube' );
-
-// Pyramid
-//
-//      ^
-//     /\\
-//    // \ \
-//   /+-x-\-+
-//  //     \/
-//  +------+
-
-W.add( 'pyramid', {
-	'vertices': [
-		-.5,-.5, .5,   .5,-.5, .5,    0, .5,  0,  // Front
-		 .5,-.5, .5,   .5,-.5,-.5,    0, .5,  0,  // Right
-		 .5,-.5,-.5,  -.5,-.5,-.5,    0, .5,  0,  // Back
-		-.5,-.5,-.5,  -.5,-.5, .5,    0, .5,  0,  // Left
-		 .5,-.5, .5,  -.5,-.5, .5,  -.5,-.5,-.5, // down
-		 .5,-.5, .5,  -.5,-.5,-.5,   .5,-.5,-.5
-	],
-	'uv': [
-		0, 0,   1, 0,  .5, 1,  // Front
-		0, 0,   1, 0,  .5, 1,  // Right
-		0, 0,   1, 0,  .5, 1,  // Back
-		0, 0,   1, 0,  .5, 1,  // Left
-		1, 1,   0, 1,   0, 0,  // down
-		1, 1,   0, 0,   1, 0
-	]
-} );
-
-// Sphere
-//
-//          =   =
-//       =         =
-//      =           =
-//     =      x      =
-//      =           =
-//       =         =
-//          =   =
-
-( ( i, ai, j, aj, p1, p2, vertices = [], indices = [], uv = [], precision = 20 ) => {
-	for( j = 0; j <= precision; j++ ) {
-		aj = j * Math.PI / precision;
-
-		for( i = 0; i <= precision; i++ ) {
-			ai = i * 2 * Math.PI / precision;
-
-			vertices.push(
-				+( Math.sin( ai ) * Math.sin( aj ) / 2 ).toFixed( 6 ),
-				+( Math.cos( aj ) / 2 ).toFixed( 6 ),
-				+( Math.cos( ai ) * Math.sin( aj ) / 2 ).toFixed( 6 )
-			);
-
-			uv.push(
-				Math.sin( i / precision ) * 3.5,
-				-Math.sin( j / precision )
-			);
-
-			if( i < precision && j < precision ) {
-				indices.push(
-					p1 = j * ( precision + 1 ) + i,
-					p2 = p1 + precision + 1,
-					p1 + 1,
-					p1 + 1,
-					p2,
-					p2 + 1
-				);
-			}
-		}
-	}
-
-	W.add( 'sphere', { 'vertices': vertices, 'uv': uv, 'indices': indices } );
-} )();

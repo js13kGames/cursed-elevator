@@ -2,10 +2,10 @@
 
 
 js13k.SCENE = {
+	NORMAL: 0,
 	TITLE: 1,
 	INTRO: 2,
-	NORMAL: 3,
-	ELEVATOR_MOVING: 4,
+	ELEVATOR_MOVING: 3,
 };
 
 js13k.STATE = {
@@ -28,9 +28,9 @@ js13k.Level = class {
 	 * @constructor
 	 */
 	constructor() {
-		this.timer = 0;
 		this._lastCheck = 0;
-
+		this.canInteract = true;
+		this.runners = [];
 		this.scene = js13k.SCENE.NORMAL; // TODO: set to TITLE
 		this.states = {
 			doors: js13k.STATE.OPEN,
@@ -39,6 +39,7 @@ js13k.Level = class {
 			floorNext: 1,
 			note: null,
 		};
+		this.timer = 0;
 
 		this._evX = 2.5;
 		this._evY = 3;
@@ -185,7 +186,7 @@ js13k.Level = class {
 		const offsetY = 6 * ( btnH + padding ) / 2;
 
 		for( let i = 0; i < 14; i++ ) {
-			const n = 'btn' + ( i + 1 );
+			const n = 'btn' + i;
 			const x = ( i % 2 ) * ( padding + btnW ) - offsetX;
 			const y = ~~( i / 2 ) * ( padding + btnH ) - offsetY;
 
@@ -364,6 +365,7 @@ js13k.Level = class {
 	 * @private
 	 */
 	_buildFloors() {
+		// Dark bottom plane
 		W.plane( {
 			'y': -this._evY / 2,
 			'z': -this._evZ / 2 - 10,
@@ -372,6 +374,16 @@ js13k.Level = class {
 			'rx': 90,
 			'rz': 180,
 			'b': '111',
+		} );
+
+		// Eyes
+		W.billboard( {
+			'n': 'eyes',
+			'y': 0.8,
+			'z': 100,
+			'w': 0.5,
+			'h': 0.5 / 4,
+			't': js13k.Assets.getEyesTexture( '•   •', '#77f' ),
 		} );
 	}
 
@@ -430,6 +442,39 @@ js13k.Level = class {
 		) {
 			this.selectObject();
 		}
+	}
+
+
+	/**
+	 *
+	 * @param {string} text
+	 * @param {string} color
+	 * @param {object} pos
+	 * @param {number} pos.x
+	 * @param {number} pos.y
+	 * @param {number} pos.z
+	 */
+	audioText( text, color, pos ) {
+		text = `*${text}*`;
+
+		const cnv = js13k.Assets.getAudioTexture( text, color );
+
+		W.plane( {
+			'n': cnv.id,
+			'x': pos.x,
+			'y': pos.y,
+			'z': pos.z + 0.01,
+			'w': 0.5,
+			'h': 0.25,
+			't': cnv,
+		} );
+
+		W.move( {
+			'n': cnv.id,
+			'y': pos.y + 0.01,
+			'a': 3000,
+			'onAnimDone': () => W.delete( cnv.id ),
+		} );
 	}
 
 
@@ -525,14 +570,27 @@ js13k.Level = class {
 			if( this.states.elevator == js13k.STATE.IDLE ) {
 				js13k.Audio.play( js13k.Audio.BUTTON );
 
-				this.states.floorNext = Number( o.n.substring( 3 ) );
+				const floor = Number( o.n.substring( 3 ) );
 
-				// Same floor
-				if( this.states.floorCurrent == this.states.floorNext ) {
+				// "Close doors" button ("><")
+				if( floor == 0 ) {
 					this.doorsClose();
 					return;
 				}
 
+				// Same floor, toggle door state
+				if( this.states.floorCurrent == floor ) {
+					if( this.states.doors == js13k.STATE.OPEN ) {
+						this.doorsClose();
+					}
+					else {
+						this.doorsOpen();
+					}
+
+					return;
+				}
+
+				this.states.floorNext = floor;
 				this.states.elevator = js13k.STATE.MOVING;
 
 				this.doorsClose( () => {
@@ -545,122 +603,38 @@ js13k.Level = class {
 
 	/**
 	 *
-	 * @returns {boolean} True when finished.
-	 */
-	playElevatorMoving() {
-		this._sceneStart = this._sceneStart || this.timer;
-
-		// Moving from 1 floor to the next takes 1.25 second.
-		// Multiple floors take longer.
-		const floorDiff = this.states.floorNext - this.states.floorCurrent;
-		const duration = 1.25 * Math.abs( floorDiff ) * js13k.TARGET_FPS;
-		const progress = ( this.timer - this._sceneStart ) / duration;
-
-		if( progress == 0 ) {
-			this._camStart = {
-				'x': W.next.camera.x,
-				'y': W.next.camera.y,
-				'z': W.next.camera.z,
-			};
-		}
-
-		this.setDisplay( this.states.floorCurrent + Math.floor( progress * floorDiff ) );
-
-		if( progress > 1 ) {
-			this.prepareFloor( this.states.floorNext );
-
-			W.camera( this._camStart );
-			js13k.Audio.play( js13k.Audio.DING );
-
-			this.states.floorCurrent = this.states.floorNext;
-
-			this.doorsOpen( () => {
-				this.states.elevator = js13k.STATE.IDLE;
-			} );
-
-			return true;
-		}
-
-		// Screen shake
-		W.camera( {
-			'x': this._camStart.x + ( Math.random() * 2 - 1 ) / 300,
-			'y': this._camStart.y + ( Math.random() * 2 - 1 ) / 300,
-			'z': this._camStart.z + ( Math.random() * 2 - 1 ) / 300,
-		} );
-
-		return false;
-	}
-
-
-	/**
-	 *
-	 * @returns {boolean} True when finished.
-	 */
-	playIntro() {
-		js13k.Renderer.cameraLocked = true;
-		this._sceneStart = this._sceneStart || this.timer;
-		const progress = ( this.timer - this._sceneStart ) / ( 3 * js13k.TARGET_FPS );
-
-		if( progress == 0 ) {
-			this.doorsClose();
-		}
-
-		const cam = {
-			'z': 0,
-			'rx': 0,
-			'ry': 0,
-		};
-
-		if( progress > 1 ) {
-			W.camera( cam );
-			js13k.Renderer.cameraLocked = false;
-
-			// Show pointer
-			document.getElementById( 'p' ).hidden = false;
-
-			delete W.next.title;
-			delete W.current.title;
-
-			return true;
-		}
-
-		// End on a smoother stop in the animation
-		cam.z = -0.5 * ( 1 - Math.sin( progress * Math.PI / 2 ) );
-		W.camera( cam );
-
-		return false;
-	}
-
-
-	/**
-	 *
-	 */
-	playTitle() {
-		js13k.Renderer.cameraLocked = true;
-		this._sceneStart = this._sceneStart || this.timer;
-		const progress = ( this.timer - this._sceneStart ) / ( 3 * js13k.TARGET_FPS );
-
-		if( progress == 0 ) {
-			// Hide pointer
-			document.getElementById( 'p' ).hidden = true;
-		}
-
-		if( progress >= 1 ) {
-			return true;
-		}
-
-		W.camera( { 'z': -0.5, 'rx': 0, 'ry': 0 } );
-
-		return false;
-	}
-
-
-	/**
-	 *
 	 * @param {number} floor
 	 */
 	prepareFloor( floor ) {
-		// TODO:
+		let eyes = {
+			'n': 'eyes',
+			'y': 0.8,
+			'z': 100, // outside of visible area
+		};
+
+		if( floor > 1 ) {
+			eyes.z = -3;
+		}
+
+		W.move( eyes );
+	}
+
+
+	/**
+	 *
+	 */
+	runRunners() {
+		for( let i = this.runners.length - 1; i >= 0; i-- ) {
+			const runner = this.runners[i];
+			runner.start ??= this.timer;
+
+			const progress = ( this.timer - runner.start ) / ( runner.duration * js13k.TARGET_FPS );
+
+			// Return something true-ish to remove a runner.
+			if( runner.do( progress ) ) {
+				this.runners.splice( i );
+			}
+		}
 	}
 
 
@@ -690,11 +664,136 @@ js13k.Level = class {
 
 	/**
 	 *
-	 * @param {js13k.SCENE} scene 
+	 * @param {js13k.SCENE} scene
 	 */
 	setScene( scene ) {
-		this._sceneStart = 0;
+		if( this.scene == scene ) {
+			return;
+		}
+
 		this.scene = scene;
+		this.canInteract = true;
+
+		const runner = {};
+
+		if( scene == js13k.SCENE.ELEVATOR_MOVING ) {
+			const camStart = {
+				'x': W.next.camera.x,
+				'y': W.next.camera.y,
+				'z': W.next.camera.z,
+			};
+
+			// Moving from 1 floor to the next takes 1.25 second.
+			// Multiple floors take longer.
+			const floorDiff = this.states.floorNext - this.states.floorCurrent;
+			runner.duration = 1.25 * Math.abs( floorDiff );
+
+			runner.do = progress => {
+				this.setDisplay( this.states.floorCurrent + Math.round( progress * floorDiff ) );
+
+				if( progress > 1 ) {
+					this.prepareFloor( this.states.floorNext );
+
+					W.camera( camStart );
+					js13k.Audio.play( js13k.Audio.DING );
+					this.audioText( 'ding', '#ff0', W.next.display );
+
+					this.states.floorCurrent = this.states.floorNext;
+
+					this.doorsOpen( () => {
+						this.states.elevator = js13k.STATE.IDLE;
+
+						setTimeout( () => {
+							const { y: startY, z: startZ } = W.next.eyes;
+							const goalY = 0.3;
+							const goalZ = -1.5;
+							const diffY = goalY - startY;
+							const diffZ = goalZ - startZ;
+	
+							this.runners.push( {
+								duration: 2,
+								do: progress => {
+									W.move( {
+										'n': 'eyes',
+										'y': startY + diffY * progress,
+										'z': startZ + diffZ * progress,
+									} );
+	
+									return progress >= 1;
+								},
+							} );
+
+							this.setScene( js13k.SCENE.NORMAL );
+						}, 1 );
+					} );
+
+					return true;
+				}
+
+				// Screen shake
+				W.camera( {
+					'x': camStart.x + ( Math.random() * 2 - 1 ) / 300,
+					'y': camStart.y + ( Math.random() * 2 - 1 ) / 300,
+					'z': camStart.z + ( Math.random() * 2 - 1 ) / 300,
+				} );
+
+				return false;
+			};
+		}
+		else if( scene == js13k.SCENE.INTRO ) {
+			this.canInteract = false;
+			this.doorsClose();
+
+			runner.duration = 3;
+			runner.do = progress => {
+				js13k.Renderer.cameraLocked = true;
+
+				const cam = {
+					'z': 0,
+					'rx': 0,
+					'ry': 0,
+				};
+
+				if( progress > 1 ) {
+					W.camera( cam );
+					js13k.Renderer.cameraLocked = false;
+
+					// Show pointer
+					document.getElementById( 'p' ).hidden = false;
+
+					W.delete( 'title' );
+
+					setTimeout( () => this.setScene( js13k.SCENE.NORMAL ), 1 );
+
+					return true;
+				}
+
+				// End on a smoother stop in the animation
+				cam.z = -0.5 * ( 1 - Math.sin( progress * Math.PI / 2 ) );
+				W.camera( cam );
+
+				return false;
+			};
+		}
+		else if( scene == js13k.SCENE.TITLE ) {
+			// Hide pointer
+			document.getElementById( 'p' ).hidden = true;
+			this.canInteract = false;
+
+			runner.duration = 3;
+			runner.do = progress => {
+				js13k.Renderer.cameraLocked = true;
+				W.camera( { 'z': -0.5, 'rx': 0, 'ry': 0 } );
+
+				if( progress >= 1 ) {
+					setTimeout( () => this.setScene( js13k.SCENE.INTRO ), 1 );
+				}
+
+				return progress >= 1;
+			};
+		}
+
+		runner.do && this.runners.push( runner );
 	}
 
 
@@ -704,28 +803,7 @@ js13k.Level = class {
 	 */
 	update( dt ) {
 		this.timer += dt;
-
-		let canInteract = true;
-
-		if( this.scene == js13k.SCENE.TITLE ) {
-			if( this.playTitle() ) {
-				this.setScene( js13k.SCENE.INTRO );
-			}
-
-			canInteract = false;
-		}
-		else if( this.scene == js13k.SCENE.INTRO ) {
-			if( this.playIntro() ) {
-				this.setScene( js13k.SCENE.NORMAL );
-			}
-
-			canInteract = false;
-		}
-		else if( this.scene == js13k.SCENE.ELEVATOR_MOVING ) {
-			if( this.playElevatorMoving() ) {
-				this.setScene( js13k.SCENE.NORMAL );
-			}
-		}
+		this.runRunners();
 
 		if( this.states.note ) {
 			const text = js13k.Assets.texts[this.states.note];
@@ -735,7 +813,7 @@ js13k.Level = class {
 				this.states.note = null;
 			}
 		}
-		else if( canInteract && this.states.elevator == js13k.STATE.IDLE ) {
+		else if( this.canInteract && this.states.elevator == js13k.STATE.IDLE ) {
 			this._checkSelections();
 		}
 	}

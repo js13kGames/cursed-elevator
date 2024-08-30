@@ -171,6 +171,7 @@ js13k.Renderer = {
 
 		const ctx = canvas.getContext( '2d', { alpha: true } );
 		ctx.imageSmoothingEnabled = false;
+		ctx.textAlign = 'center';
 
 		return [canvas, ctx];
 	},
@@ -323,7 +324,7 @@ js13k.Renderer = {
 	registerEvents() {
 		let mouseLastX = null;
 		let mouseLastY = null;
-		const camSpeed = 0.5;
+		const camSpeed = 0.4;
 
 		window.addEventListener( 'resize', _ev => this.resize() );
 

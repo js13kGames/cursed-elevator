@@ -23,14 +23,14 @@ js13k.Assets = {
 		const w = 100;
 		const h = 70;
 
-		for( let i = 1; i <= 14; i++ ) {
+		for( let i = 0; i < 14; i++ ) {
 			const key = 's_lbl_btn' + i;
+			const text = i == 0 ? '><' : String( i ).padStart( 2, '0' );
 
 			const [canvas, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
 			ctx.font = '600 32px ' + js13k.FONT_SANS;
-			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
-			ctx.fillText( String( i ).padStart( 2, '0' ), w / 2, h / 2 + 2 );
+			ctx.fillText( text, w / 2, h / 2 + 2 );
 
 			this.textures[key] = canvas;
 		}
@@ -91,10 +91,37 @@ js13k.Assets = {
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, 'title' );
 		ctx.fillStyle = '#f00';
 		ctx.font = '600 64px ' + js13k.FONT_SERIF;
-		ctx.textAlign = 'center';
 		ctx.fillText( js13k.TITLE, w / 2, h / 2 );
 
 		this.textures.title = cnv;
+	},
+
+
+	/**
+	 *
+	 * @param {string} text
+	 * @param {string} color
+	 * @returns {HTMLCanvasElement}
+	 */
+	getAudioTexture( text, color ) {
+		const key = 'audio:' + text + color;
+
+		if( this.textures[key] ) {
+			return this.textures[key];
+		}
+
+		const w = 200;
+		const h = Math.round( w / 2 );
+
+		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
+		ctx.fillStyle = color;
+		ctx.font = '36px ' + js13k.FONT_SANS;
+		ctx.textBaseline = 'middle';
+		ctx.fillText( String( text ), w / 2, h / 2 + 6 );
+
+		this.textures[key] = cnv;
+
+		return cnv;
 	},
 
 
@@ -104,17 +131,52 @@ js13k.Assets = {
 	 * @returns {HTMLCanvasElement}
 	 */
 	getDisplayTexture( text ) {
+		const key = 'dis:' + text;
+
+		if( this.textures[key] ) {
+			return this.textures[key];
+		}
+
 		const w = 200;
 		const h = Math.round( w / 2 );
 
-		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, 'dis:' + text );
+		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
 		ctx.fillStyle = '#f00';
 		ctx.fillRect( 0, 0, w, h );
 		ctx.fillStyle = '#fff';
 		ctx.font = '600 64px ' + js13k.FONT_MONO;
-		ctx.textAlign = 'center';
 		ctx.textBaseline = 'middle';
 		ctx.fillText( String( text ), w / 2, h / 2 + 6 );
+
+		this.textures[key] = cnv;
+
+		return cnv;
+	},
+
+
+	/**
+	 *
+	 * @param {string} text
+	 * @param {string} color
+	 * @returns {HTMLCanvasElement}
+	 */
+	getEyesTexture( text, color ) {
+		const key = 'eyes:' + text + color;
+
+		if( this.textures[key] ) {
+			return this.textures[key];
+		}
+
+		const w = 200;
+		const h = 50;
+
+		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
+		ctx.fillStyle = color;
+		ctx.font = '600 42px ' + js13k.FONT_MONO;
+		ctx.textBaseline = 'middle';
+		ctx.fillText( String( text ), w / 2, h / 2 );
+
+		this.textures[key] = cnv;
 
 		return cnv;
 	},
