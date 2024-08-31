@@ -111,7 +111,8 @@ W = {
 
 				// Texture and final color
 				'c = mix(texture(sampler, v_uv.xy), v_col, o[3]);' +
-				'c = vec4(c.rgb * (ambient + lambert + specular), c.a);' +
+				'float f = o[1] > 0. ? ambient + lambert + specular : 1.;' +
+				'c = vec4(c.rgb * f, c.a);' +
 			'}'
 		);
 

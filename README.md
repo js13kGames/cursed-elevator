@@ -11,10 +11,12 @@ Theme: **Triskaidekaphobia** *(fear of the number 13)*
 ...
 
 
-## Controls keyboard
+## Controls
 
-* `[Escape]` to pause/unpause
+* `[W][A][S][D]` / Arrow keys to look around
 * `[R]` to reset the camera
+* `[E][Enter]` / Mouse click to interact
+* `[Escape]` to pause/unpause
 
 
 ## Why aren't you using the PointerLock API?

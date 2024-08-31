@@ -62,6 +62,7 @@ js13k.Level = class {
 		this._buildElevatorDisplay();
 		this._buildElevatorNumberPad();
 		this._buildFloors();
+		this._buildHighlight();
 
 		this.setDisplay( this.states.floorCurrent );
 	}
@@ -334,6 +335,7 @@ js13k.Level = class {
 		// front, right side
 		W.cube( {
 			'g': g,
+			'n': 's__fr',
 			'x': ( this._evX - this._evX / 4.5 ) / 2,
 			'z': -this._evZ / 2,
 			'w': this._evX / 4.5,
@@ -392,6 +394,50 @@ js13k.Level = class {
 	 *
 	 * @private
 	 */
+	_buildHighlight() {
+		const color = 'fff';
+		const size = 0.005;
+
+		W.group( { 'n': 'hl' } );
+
+		W.cube( {
+			'n': 'hl_t',
+			'g': 'hl',
+			'size': size,
+			'b': color,
+			'ns': 1,
+		} );
+
+		W.cube( {
+			'n': 'hl_r',
+			'g': 'hl',
+			'size': size,
+			'b': color,
+			'ns': 1,
+		} );
+
+		W.cube( {
+			'n': 'hl_b',
+			'g': 'hl',
+			'size': size,
+			'b': color,
+			'ns': 1,
+		} );
+
+		W.cube( {
+			'n': 'hl_l',
+			'g': 'hl',
+			'size': size,
+			'b': color,
+			'ns': 1,
+		} );
+	}
+
+
+	/**
+	 *
+	 * @private
+	 */
 	_checkSelections() {
 		// Only check objects every 50 ms
 		if( this.timer - this._lastCheck > 0.05 * js13k.TARGET_FPS ) {
@@ -410,69 +456,67 @@ js13k.Level = class {
 				const target = W.next[key];
 
 				if( target ) {
-					if( this._lastSelectable ) {
-						W.move( {
-							'n': this._lastSelectable.n,
-							'b': this._lastSelectable.b,
-						} );
-					}
-
 					this._lastSelectable = {
 						hit: hit.n,
 						'n': key,
-						'b': target.b,
 					};
-
-					W.move( { 'n': key, 'b': 'fff' } );
 				}
 			}
 			else if( !hit && this._lastSelectable ) {
-				W.move( {
-					'n': this._lastSelectable.n,
-					'b': this._lastSelectable.b,
-				} );
-
 				this._lastSelectable = null;
 			}
 		}
 
-		if(
-			this._lastSelectable &&
-			js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true )
-		) {
-			this.selectObject();
+		this.highlight( this._lastSelectable );
+
+		if( this._lastSelectable ) {
+			const cnvUI = js13k.Renderer.cnvUI;
+			const ctxUI = js13k.Renderer.ctxUI;
+			ctxUI.fillStyle = '#fff';
+			ctxUI.font = '20px ' + js13k.FONT_MONO;
+			ctxUI.textAlign = 'center';
+			ctxUI.fillText( '[E]/LEFT-CLICK TO SELECT', cnvUI.width / 2, cnvUI.height - 42 );
+
+			if( js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true ) ) {
+				this.selectObject();
+			}
 		}
 	}
 
 
 	/**
 	 *
-	 * @param {string} text
-	 * @param {string} color
-	 * @param {object} pos
-	 * @param {number} pos.x
-	 * @param {number} pos.y
-	 * @param {number} pos.z
+	 * @param {string}  text
+	 * @param {string}  color
+	 * @param {number}  duration
+	 * @param {object}  pos
+	 * @param {string?} pos.g
+	 * @param {number}  pos.x
+	 * @param {number}  pos.y
+	 * @param {number}  pos.z
 	 */
-	audioText( text, color, pos ) {
+	audioText( text, color, duration, pos ) {
 		text = `*${text}*`;
 
 		const cnv = js13k.Assets.getAudioTexture( text, color );
+		const moveY = 0.01 * duration;
 
 		W.plane( {
 			'n': cnv.id,
+			'g': pos.g,
 			'x': pos.x,
-			'y': pos.y,
-			'z': pos.z + 0.01,
+			'y': pos.y + 0.05,
+			'z': pos.z + 0.1,
 			'w': 0.5,
 			'h': 0.25,
 			't': cnv,
+			'ns': 1,
 		} );
 
 		W.move( {
 			'n': cnv.id,
-			'y': pos.y + 0.01,
-			'a': 3000,
+			'y': pos.y + 0.05 + moveY,
+			'a': duration * 1000,
 			'onAnimDone': () => W.delete( cnv.id ),
 		} );
 	}
@@ -554,6 +598,30 @@ js13k.Level = class {
 
 
 	/**
+	 * 
+	 * @param {object}  o
+	 * @param {string?} o.g
+	 * @param {number}  o.x
+	 * @param {number}  o.y
+	 * @param {number}  o.z
+	 * @returns {object}
+	 */
+	getGlobalPos( o ) {
+		if( !o.g ) {
+			return o;
+		}
+
+		const group = W.next[o.g];
+
+		return {
+			x: group.x + o.x,
+			y: group.y + o.y,
+			z: group.z + o.z,
+		};
+	}
+
+
+	/**
 	 *
 	 * @param {object} o
 	 * @param {string} o.n
@@ -569,6 +637,7 @@ js13k.Level = class {
 		else if( o.n.startsWith( 'btn' ) ) {
 			if( this.states.elevator == js13k.STATE.IDLE ) {
 				js13k.Audio.play( js13k.Audio.BUTTON );
+				this.audioText( 'beep', '#ff0', 1, o );
 
 				const floor = Number( o.n.substring( 3 ) );
 
@@ -598,6 +667,63 @@ js13k.Level = class {
 				} );
 			}
 		}
+	}
+
+
+	/**
+	 *
+	 * @param {object?} target
+	 * @param {string}  target.n
+	 */
+	highlight( target ) {
+		if( !target ) {
+			W.move( {
+				'n': 'hl',
+				'z': 100,
+			} );
+
+			return;
+		}
+
+		const o = W.next[target.n];
+		const pos = this.getGlobalPos( o );
+		const size = 0.005;
+
+		W.move( {
+			'n': 'hl',
+			'x': pos.x,
+			'y': pos.y,
+			'z': pos.z + 0.01,
+			'rz': o.rz,
+		} );
+
+		W.move( {
+			'n': 'hl_t',
+			'y': o.h / 2,
+			'w': o.w,
+			'h': size,
+		} );
+
+		W.move( {
+			'n': 'hl_r',
+			'x': o.w / 2,
+			'h': o.h,
+			'w': size,
+		} );
+
+		W.move( {
+			'n': 'hl_b',
+			'y': -o.h / 2,
+			'w': o.w,
+			'h': size,
+		} );
+
+		W.move( {
+			'n': 'hl_l',
+			'x': -o.w / 2,
+			'h': o.h,
+			'w': size,
+		} );
 	}
 
 
@@ -696,7 +822,7 @@ js13k.Level = class {
 
 					W.camera( camStart );
 					js13k.Audio.play( js13k.Audio.DING );
-					this.audioText( 'ding', '#ff0', W.next.display );
+					this.audioText( 'ding', '#ff0', 3, W.next.display );
 
 					this.states.floorCurrent = this.states.floorNext;
 

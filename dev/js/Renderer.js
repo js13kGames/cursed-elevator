@@ -28,7 +28,7 @@ js13k.Renderer = {
 
 	/**
 	 *
-	 * @returns {object}
+	 * @returns {object?}
 	 */
 	checkSelectables() {
 		let hits = [];
@@ -74,7 +74,9 @@ js13k.Renderer = {
 			}
 		}
 
-		return this.getClosest( ray.origin, hits );
+		const closest = this.getClosest( ray.origin, hits );
+
+		return !closest?.n.startsWith( 's__' ) && closest;
 	},
 
 
@@ -466,6 +468,30 @@ js13k.Renderer = {
 
 			this.timer += dt;
 			this.level.update( dt );
+
+			// Keyboard camera controls
+			if( !this.cameraLocked ) {
+				const speed = 0.3;
+
+				if( js13k.Input.isPressed( js13k.Input.ACTION.UP ) ) {
+					this.camera.rx += speed;
+				}
+				else if( js13k.Input.isPressed( js13k.Input.ACTION.DOWN ) ) {
+					this.camera.rx -= speed;
+				}
+
+				if( js13k.Input.isPressed( js13k.Input.ACTION.LEFT ) ) {
+					this.camera.ry += speed;
+				}
+				else if( js13k.Input.isPressed( js13k.Input.ACTION.RIGHT ) ) {
+					this.camera.ry -= speed;
+				}
+
+				this.camera.rx = Math.min( 80, Math.max( -60, this.camera.rx ) );
+				this.camera.ry = this.camera.ry % 360;
+
+				W.camera( this.camera );
+			}
 		}
 
 		this.last = timestamp;
