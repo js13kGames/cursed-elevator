@@ -1,9 +1,9 @@
 # Directories
+/build/
 /ignore/
 /node_modules/
 
 # Files
-/build/*.zip
 /dev/js/lib/w.js
 IDEAS.md
 package-lock.json
