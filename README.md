@@ -27,5 +27,5 @@ When the pointer is locked, the normal mouse event attributes like `clientX` or 
 ## Resources
 
 * [ptex – Mini randomized pixel-art textures](https://xem.github.io/pxtex/)
-* [W – A micro WebGL2 framework](https://xem.github.io/W/)
+* [W – A micro WebGL2 framework](https://xem.github.io/W/) (with a lot of modifications)
 * [ZzFX – Zuper Zmall Zound Zynth](https://github.com/KilledByAPixel/ZzFX)

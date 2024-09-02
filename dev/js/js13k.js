@@ -18,6 +18,30 @@ const js13k = {
 
 
 	/**
+	 * 
+	 * @param {object}  o
+	 * @param {string?} o.g
+	 * @param {number}  o.x
+	 * @param {number}  o.y
+	 * @param {number}  o.z
+	 * @returns {object}
+	 */
+	getGlobalPos( o ) {
+		if( !o.g ) {
+			return o;
+		}
+
+		const group = W.next[o.g];
+
+		return {
+			x: group.x + o.x,
+			y: group.y + o.y,
+			z: group.z + o.z,
+		};
+	},
+
+
+	/**
 	 *
 	 */
 	init() {

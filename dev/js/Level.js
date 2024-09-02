@@ -31,15 +31,18 @@ js13k.Level = class {
 		this._lastCheck = 0;
 		this.canInteract = true;
 		this.runners = [];
-		this.scene = js13k.SCENE.NORMAL; // TODO: set to TITLE
-		this.states = {
-			doors: js13k.STATE.OPEN,
-			elevator: js13k.STATE.IDLE,
-			floorCurrent: 1,
-			floorNext: 1,
-			note: null,
-		};
 		this.timer = 0;
+
+		this.buttonsEnabled = [];
+		this.deaths = 0;
+		this.doors = js13k.STATE.OPEN;
+		this.elevator = js13k.STATE.IDLE;
+		this.floorCurrent = 1;
+		this.floorNext = 1;
+		this.floorsVisited = [];
+		this.loop = 1;
+		this.note = null;
+		this.scene = js13k.SCENE.NORMAL; // TODO: set to TITLE
 
 		this._evX = 2.5;
 		this._evY = 3;
@@ -64,7 +67,9 @@ js13k.Level = class {
 		this._buildFloors();
 		this._buildHighlight();
 
-		this.setDisplay( this.states.floorCurrent );
+		this.setDisplay( this.floorCurrent );
+		this.prepareLoop( this.loop );
+		this.prepareFloor( this.floorCurrent );
 	}
 
 
@@ -486,52 +491,91 @@ js13k.Level = class {
 
 	/**
 	 *
-	 * @param {string}  text
-	 * @param {string}  color
-	 * @param {number}  duration
-	 * @param {object}  pos
-	 * @param {string?} pos.g
-	 * @param {number}  pos.x
-	 * @param {number}  pos.y
-	 * @param {number}  pos.z
 	 */
-	audioText( text, color, duration, pos ) {
-		text = `*${text}*`;
-
-		const cnv = js13k.Assets.getAudioTexture( text, color );
-		const moveY = 0.01 * duration;
-
-		W.plane( {
-			'n': cnv.id,
-			'g': pos.g,
-			'x': pos.x,
-			'y': pos.y + 0.05,
-			'z': pos.z + 0.1,
-			'w': 0.5,
-			'h': 0.25,
-			't': cnv,
-			'ns': 1,
-		} );
-
-		W.move( {
-			'n': cnv.id,
-			'y': pos.y + 0.05 + moveY,
-			'a': duration * 1000,
-			'onAnimDone': () => W.delete( cnv.id ),
-		} );
+	clicked() {
+		if( this.note ) {
+			this.note = null;
+		}
+		else {
+			this.selectObject();
+		}
 	}
 
 
 	/**
 	 *
+	 * @param {number} floor
 	 */
-	clicked() {
-		if( this.states.note ) {
-			this.states.note = null;
+	doFloorAction( floor ) {
+		const loop = this.loop;
+		let scene = js13k.SCENE.NORMAL;
+
+		if( loop == 1 ) {
+			// (red) stares froma distance, next loop
+			if( floor == 13 ) {
+				// TODO: transition to next loop
+				this.loopNext( loop + 1 );
+			}
 		}
-		else {
-			this.selectObject();
+		else if( loop == 2 ) {
+			// (red) is closer now, next loop
+			if( floor == 13 ) {
+				// TODO: transition to next loop
+				this.loopNext( loop + 1 );
+			}
 		}
+		else if( loop == 3 ) {
+			// Have (red) walk closer, next loop
+			if( floor == 13 ) {
+				const { y: startY, z: startZ } = W.next.eyes;
+				const goalY = 0.3;
+				const goalZ = -1.5;
+				const diffY = goalY - startY;
+				const diffZ = goalZ - startZ;
+
+				this.runners.push( {
+					duration: 2,
+					do: progress => {
+						W.move( {
+							'n': 'eyes',
+							'y': startY + diffY * progress,
+							'z': startZ + diffZ * progress,
+						} );
+
+						if( progress >= 1 ) {
+							// TODO: transition to next loop
+							this.loopNext( loop + 1 );
+
+							return true;
+						}
+
+						return false;
+					},
+				} );
+			}
+		}
+		else if( loop == 4 ) {
+			// Empty, next loop
+			if( floor == 13 ) {
+				// TODO: transition to next loop
+				this.loopNext( loop + 1 );
+			}
+		}
+		else if( loop == 5 ) {
+			// Empty, next loop
+			if( floor == 13 ) {
+				// TODO: transition to next loop
+				this.loopNext( loop + 1 );
+			}
+		}
+		else if( loop == 6 ) {
+			// Ending
+			if( floor == 1 ) {
+				// TODO: outro animation
+			}
+		}
+
+		this.setScene( scene );
 	}
 
 
@@ -543,7 +587,7 @@ js13k.Level = class {
 		return [
 			js13k.STATE.CLOSING,
 			js13k.STATE.OPENING,
-		].includes( this.states.doors );
+		].includes( this.doors );
 	}
 
 
@@ -552,12 +596,12 @@ js13k.Level = class {
 	 * @param {function?} cb
 	 */
 	doorsClose( cb ) {
-		if( this.states.doors == js13k.STATE.CLOSED || this.doorsInMotion() ) {
+		if( this.doors == js13k.STATE.CLOSED || this.doorsInMotion() ) {
 			cb?.();
 			return;
 		}
 
-		this.states.doors = js13k.STATE.CLOSING;
+		this.doors = js13k.STATE.CLOSING;
 
 		W.move( { 'n': 'dl', 'x': -this._rightDoorClosed, 'a': 2000 } );
 		W.move( {
@@ -565,7 +609,7 @@ js13k.Level = class {
 			'x': this._rightDoorClosed,
 			'a': 2000,
 			'onAnimDone': () => {
-				this.states.doors = js13k.STATE.CLOSED;
+				this.doors = js13k.STATE.CLOSED;
 				cb?.();
 			},
 		} );
@@ -577,12 +621,12 @@ js13k.Level = class {
 	 * @param {function?} cb
 	 */
 	doorsOpen( cb ) {
-		if( this.states.doors == js13k.STATE.OPEN || this.doorsInMotion() ) {
+		if( this.doors == js13k.STATE.OPEN || this.doorsInMotion() ) {
 			cb?.();
 			return;
 		}
 
-		this.states.doors = js13k.STATE.OPENING;
+		this.doors = js13k.STATE.OPENING;
 
 		W.move( { 'n': 'dl', 'x': -this._rightDoorOpen, 'a': 2000 } );
 		W.move( {
@@ -590,34 +634,10 @@ js13k.Level = class {
 			'x': this._rightDoorOpen,
 			'a': 2000,
 			'onAnimDone': () => {
-				this.states.doors = js13k.STATE.OPEN;
+				this.doors = js13k.STATE.OPEN;
 				cb?.();
 			},
 		} );
-	}
-
-
-	/**
-	 * 
-	 * @param {object}  o
-	 * @param {string?} o.g
-	 * @param {number}  o.x
-	 * @param {number}  o.y
-	 * @param {number}  o.z
-	 * @returns {object}
-	 */
-	getGlobalPos( o ) {
-		if( !o.g ) {
-			return o;
-		}
-
-		const group = W.next[o.g];
-
-		return {
-			x: group.x + o.x,
-			y: group.y + o.y,
-			z: group.z + o.z,
-		};
 	}
 
 
@@ -632,12 +652,17 @@ js13k.Level = class {
 		}
 
 		if( o.n.startsWith( 's_note' ) ) {
-			this.states.note = o.n;
+			this.note = o.n;
 		}
 		else if( o.n.startsWith( 'btn' ) ) {
-			if( this.states.elevator == js13k.STATE.IDLE ) {
+			if( this.elevator == js13k.STATE.IDLE ) {
+				if( !this.isButtonEnabled( o.n ) ) {
+					js13k.Audio.play( js13k.Audio.ERROR );
+					return;
+				}
+
 				js13k.Audio.play( js13k.Audio.BUTTON );
-				this.audioText( 'beep', '#ff0', 1, o );
+				js13k.Audio.text( 'beep', '#ff0', 1, o );
 
 				const floor = Number( o.n.substring( 3 ) );
 
@@ -648,8 +673,8 @@ js13k.Level = class {
 				}
 
 				// Same floor, toggle door state
-				if( this.states.floorCurrent == floor ) {
-					if( this.states.doors == js13k.STATE.OPEN ) {
+				if( this.floorCurrent == floor ) {
+					if( this.doors == js13k.STATE.OPEN ) {
 						this.doorsClose();
 					}
 					else {
@@ -659,8 +684,8 @@ js13k.Level = class {
 					return;
 				}
 
-				this.states.floorNext = floor;
-				this.states.elevator = js13k.STATE.MOVING;
+				this.floorNext = floor;
+				this.elevator = js13k.STATE.MOVING;
 
 				this.doorsClose( () => {
 					this.setScene( js13k.SCENE.ELEVATOR_MOVING );
@@ -676,7 +701,7 @@ js13k.Level = class {
 	 * @param {string}  target.n
 	 */
 	highlight( target ) {
-		if( !target ) {
+		if( !target || !this.isButtonEnabled( target.n ) ) {
 			W.move( {
 				'n': 'hl',
 				'z': 100,
@@ -686,7 +711,7 @@ js13k.Level = class {
 		}
 
 		const o = W.next[target.n];
-		const pos = this.getGlobalPos( o );
+		const pos = js13k.getGlobalPos( o );
 		const size = 0.005;
 
 		W.move( {
@@ -729,20 +754,87 @@ js13k.Level = class {
 
 	/**
 	 *
+	 * @param {string} n
+	 * @returns {boolean}
+	 */
+	isButtonEnabled( n ) {
+		const index = Number( n.replace( 'btn', '' ) );
+
+		return this.buttonsEnabled.includes( index );
+	}
+
+
+	/**
+	 *
+	 * @param {number} nextLoop
+	 */
+	loopNext( nextLoop ) {
+		this.loop = nextLoop;
+		this.floorsVisited = [];
+	}
+
+
+	/**
+	 *
 	 * @param {number} floor
 	 */
 	prepareFloor( floor ) {
-		let eyes = {
+		const loop = this.loop;
+
+		const red = {
 			'n': 'eyes',
 			'y': 0.8,
 			'z': 100, // outside of visible area
 		};
 
-		if( floor > 1 ) {
-			eyes.z = -3;
+		if( loop == 1 ) {
+			if( floor == 13 ) {
+				red.z = -3;
+			}
+		}
+		else if( loop == 2 ) {
+			if( floor == 13 ) {
+				red.z = -3;
+			}
+		}
+		else if( loop == 3 ) {
+			if( floor == 13 ) {
+				red.z = -3;
+			}
+		}
+		else if( loop == 4 ) {
+			if( floor == 7 ) {
+				red.z = -3;
+			}
+		}
+		else if( loop == 5 ) {
+			if( floor == 7 ) {
+				red.z = -3;
+			}
+		}
+		else if( loop == 6 ) {
+			//
 		}
 
-		W.move( eyes );
+		W.move( red );
+	}
+
+
+	/**
+	 *
+	 * @param {number} loop
+	 */
+	prepareLoop( loop ) {
+		const enabledButtons = [
+			[0, 13],
+			[0, 3, 13],
+			[0, 3, 7, 13],
+			[0, 3, 4, 7, 13],
+			[0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], // 13 when button found
+			[1],
+		];
+
+		this.buttonsEnabled = enabledButtons[loop - 1];
 	}
 
 
@@ -811,46 +903,25 @@ js13k.Level = class {
 
 			// Moving from 1 floor to the next takes 1.25 second.
 			// Multiple floors take longer.
-			const floorDiff = this.states.floorNext - this.states.floorCurrent;
+			const floorDiff = this.floorNext - this.floorCurrent;
 			runner.duration = 1.25 * Math.abs( floorDiff );
 
 			runner.do = progress => {
-				this.setDisplay( this.states.floorCurrent + Math.round( progress * floorDiff ) );
+				this.setDisplay( this.floorCurrent + Math.round( progress * floorDiff ) );
 
 				if( progress > 1 ) {
-					this.prepareFloor( this.states.floorNext );
+					this.prepareFloor( this.floorNext );
 
 					W.camera( camStart );
 					js13k.Audio.play( js13k.Audio.DING );
-					this.audioText( 'ding', '#ff0', 3, W.next.display );
+					js13k.Audio.text( 'ding', '#ff0', 3, W.next.display );
 
-					this.states.floorCurrent = this.states.floorNext;
+					this.floorCurrent = this.floorNext;
+					this.floorsVisited.push( this.floorCurrent );
 
 					this.doorsOpen( () => {
-						this.states.elevator = js13k.STATE.IDLE;
-
-						setTimeout( () => {
-							const { y: startY, z: startZ } = W.next.eyes;
-							const goalY = 0.3;
-							const goalZ = -1.5;
-							const diffY = goalY - startY;
-							const diffZ = goalZ - startZ;
-	
-							this.runners.push( {
-								duration: 2,
-								do: progress => {
-									W.move( {
-										'n': 'eyes',
-										'y': startY + diffY * progress,
-										'z': startZ + diffZ * progress,
-									} );
-	
-									return progress >= 1;
-								},
-							} );
-
-							this.setScene( js13k.SCENE.NORMAL );
-						}, 1 );
+						this.elevator = js13k.STATE.IDLE;
+						setTimeout( () => this.doFloorAction( this.floorCurrent ), 1 );
 					} );
 
 					return true;
@@ -931,15 +1002,15 @@ js13k.Level = class {
 		this.timer += dt;
 		this.runRunners();
 
-		if( this.states.note ) {
-			const text = js13k.Assets.texts[this.states.note];
+		if( this.note ) {
+			const text = js13k.Assets.texts[this.note];
 			js13k.Renderer.drawNote( text );
 
 			if( js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true ) ) {
-				this.states.note = null;
+				this.note = null;
 			}
 		}
-		else if( this.canInteract && this.states.elevator == js13k.STATE.IDLE ) {
+		else if( this.canInteract && this.elevator == js13k.STATE.IDLE ) {
 			this._checkSelections();
 		}
 	}
