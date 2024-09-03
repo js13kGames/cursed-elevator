@@ -6,6 +6,7 @@ js13k.SCENE = {
 	TITLE: 1,
 	INTRO: 2,
 	ELEVATOR_MOVING: 3,
+	NEXT_LOOP: 4,
 };
 
 js13k.STATE = {
@@ -384,13 +385,36 @@ js13k.Level = class {
 		} );
 
 		// Eyes
-		W.billboard( {
-			'n': 'eyes',
+		// (red)
+		W.plane( {
+			'n': 'e_red',
 			'y': 0.8,
 			'z': 100,
 			'w': 0.5,
 			'h': 0.5 / 4,
-			't': js13k.Assets.getEyesTexture( '•   •', '#77f' ),
+			't': js13k.Assets.getEyesTexture( '•   •', 'f00' ),
+		} );
+		// (blue)
+		W.plane( {
+			'n': 'e_blue',
+			'y': -0.1,
+			'z': 100,
+			'w': 0.5,
+			'h': 0.5 / 4,
+			't': js13k.Assets.getEyesTexture( '•   •', '77f' ),
+		} );
+		// (pink)
+		W.group( {
+			'n': 'e_pink_all',
+			'z': 100,
+		} );
+		W.plane( {
+			'g': 'e_pink_all',
+			'n': 'e_pink1',
+			'y': 0.8,
+			'w': 0.5,
+			'h': 0.5 / 4,
+			't': js13k.Assets.getEyesTexture( '•   •', 'f2c' ),
 		} );
 	}
 
@@ -508,26 +532,33 @@ js13k.Level = class {
 	 */
 	doFloorAction( floor ) {
 		const loop = this.loop;
+		const hasFloor13 = this.buttonsEnabled.includes( 13 );
 		let scene = js13k.SCENE.NORMAL;
 
 		if( loop == 1 ) {
-			// (red) stares froma distance, next loop
+			// (red) stares from a distance, next loop
 			if( floor == 13 ) {
-				// TODO: transition to next loop
-				this.loopNext( loop + 1 );
+				scene = js13k.SCENE.NEXT_LOOP;
 			}
 		}
 		else if( loop == 2 ) {
+			if( !hasFloor13 ) {
+				this.buttonsEnabled.push( 13 );
+			}
+
 			// (red) is closer now, next loop
 			if( floor == 13 ) {
-				// TODO: transition to next loop
-				this.loopNext( loop + 1 );
+				scene = js13k.SCENE.NEXT_LOOP;
 			}
 		}
 		else if( loop == 3 ) {
+			if( !hasFloor13 && this.hasVisitedFloors( [3, 7] ) ) {
+				this.buttonsEnabled.push( 13 );
+			}
+
 			// Have (red) walk closer, next loop
 			if( floor == 13 ) {
-				const { y: startY, z: startZ } = W.next.eyes;
+				const { y: startY, z: startZ } = W.next.e_red;
 				const goalY = 0.3;
 				const goalZ = -1.5;
 				const diffY = goalY - startY;
@@ -537,14 +568,13 @@ js13k.Level = class {
 					duration: 2,
 					do: progress => {
 						W.move( {
-							'n': 'eyes',
+							'n': 'e_red',
 							'y': startY + diffY * progress,
 							'z': startZ + diffZ * progress,
 						} );
 
 						if( progress >= 1 ) {
-							// TODO: transition to next loop
-							this.loopNext( loop + 1 );
+							this.setScene( js13k.SCENE.NEXT_LOOP );
 
 							return true;
 						}
@@ -553,19 +583,23 @@ js13k.Level = class {
 					},
 				} );
 			}
+
+			return;
 		}
 		else if( loop == 4 ) {
+			if( !hasFloor13 && this.hasVisitedFloors( [3, 4, 7] ) ) {
+				this.buttonsEnabled.push( 13 );
+			}
+
 			// Empty, next loop
 			if( floor == 13 ) {
-				// TODO: transition to next loop
-				this.loopNext( loop + 1 );
+				scene = js13k.SCENE.NEXT_LOOP;
 			}
 		}
 		else if( loop == 5 ) {
 			// Empty, next loop
 			if( floor == 13 ) {
-				// TODO: transition to next loop
-				this.loopNext( loop + 1 );
+				scene = js13k.SCENE.NEXT_LOOP;
 			}
 		}
 		else if( loop == 6 ) {
@@ -603,7 +637,11 @@ js13k.Level = class {
 
 		this.doors = js13k.STATE.CLOSING;
 
-		W.move( { 'n': 'dl', 'x': -this._rightDoorClosed, 'a': 2000 } );
+		W.move( {
+			'n': 'dl',
+			'x': -this._rightDoorClosed,
+			'a': 2000,
+		} );
 		W.move( {
 			'n': 'drg',
 			'x': this._rightDoorClosed,
@@ -628,7 +666,11 @@ js13k.Level = class {
 
 		this.doors = js13k.STATE.OPENING;
 
-		W.move( { 'n': 'dl', 'x': -this._rightDoorOpen, 'a': 2000 } );
+		W.move( {
+			'n': 'dl',
+			'x': -this._rightDoorOpen,
+			'a': 2000,
+		} );
 		W.move( {
 			'n': 'drg',
 			'x': this._rightDoorOpen,
@@ -662,7 +704,7 @@ js13k.Level = class {
 				}
 
 				js13k.Audio.play( js13k.Audio.BUTTON );
-				js13k.Audio.text( 'beep', '#ff0', 1, o );
+				js13k.Audio.text( 'beep', 'ff0', 1, o );
 
 				const floor = Number( o.n.substring( 3 ) );
 
@@ -687,11 +729,25 @@ js13k.Level = class {
 				this.floorNext = floor;
 				this.elevator = js13k.STATE.MOVING;
 
-				this.doorsClose( () => {
-					this.setScene( js13k.SCENE.ELEVATOR_MOVING );
-				} );
+				this.doorsClose( () => this.setScene( js13k.SCENE.ELEVATOR_MOVING ) );
 			}
 		}
+	}
+
+
+	/**
+	 *
+	 * @param {number[]} check
+	 * @returns {boolean}
+	 */
+	hasVisitedFloors( check ) {
+		for( let i = 0; i < check.length; i++ ) {
+			if( !this.floorsVisited.includes( check[i] ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 
@@ -758,9 +814,9 @@ js13k.Level = class {
 	 * @returns {boolean}
 	 */
 	isButtonEnabled( n ) {
-		const index = Number( n.replace( 'btn', '' ) );
-
-		return this.buttonsEnabled.includes( index );
+		return this.buttonsEnabled.includes(
+			Number( n.replace( 'btn', '' ) )
+		);
 	}
 
 
@@ -769,8 +825,19 @@ js13k.Level = class {
 	 * @param {number} nextLoop
 	 */
 	loopNext( nextLoop ) {
+		W.camera( {
+			'x': 0,
+			'y': 0,
+			'z': 0,
+		} );
+
 		this.loop = nextLoop;
 		this.floorsVisited = [];
+		this.floorCurrent = 1;
+		this.floorNext = 1;
+		this.setDisplay( 1 );
+		this.prepareLoop( nextLoop );
+		this._lastSelectable = null;
 	}
 
 
@@ -782,9 +849,13 @@ js13k.Level = class {
 		const loop = this.loop;
 
 		const red = {
-			'n': 'eyes',
+			'n': 'e_red',
 			'y': 0.8,
 			'z': 100, // outside of visible area
+		};
+		const blue = {
+			'n': 'e_blue',
+			'z': 100,
 		};
 
 		if( loop == 1 ) {
@@ -793,7 +864,10 @@ js13k.Level = class {
 			}
 		}
 		else if( loop == 2 ) {
-			if( floor == 13 ) {
+			if( floor == 3 ) {
+				blue.z = -4;
+			}
+			else if( floor == 13 ) {
 				red.z = -3;
 			}
 		}
@@ -817,6 +891,7 @@ js13k.Level = class {
 		}
 
 		W.move( red );
+		W.move( blue );
 	}
 
 
@@ -827,14 +902,18 @@ js13k.Level = class {
 	prepareLoop( loop ) {
 		const enabledButtons = [
 			[0, 13],
-			[0, 3, 13],
-			[0, 3, 7, 13],
-			[0, 3, 4, 7, 13],
+			[0, 3],
+			[0, 3, 7],
+			[0, 3, 4, 7],
 			[0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], // 13 when button found
 			[1],
 		];
 
 		this.buttonsEnabled = enabledButtons[loop - 1];
+
+		if( loop == 2 ) {
+			W.delete( 's_note1' );
+		}
 	}
 
 
@@ -901,10 +980,11 @@ js13k.Level = class {
 				'z': W.next.camera.z,
 			};
 
-			// Moving from 1 floor to the next takes 1.25 second.
-			// Multiple floors take longer.
+			// Moving from 1 floor to the next takes 1.2 seconds.
+			// Multiple floors take longer. But the greater the
+			// floor difference, the faster it is.
 			const floorDiff = this.floorNext - this.floorCurrent;
-			runner.duration = 1.25 * Math.abs( floorDiff );
+			runner.duration = Math.min( 5, 1.2 * Math.abs( floorDiff ) );
 
 			runner.do = progress => {
 				this.setDisplay( this.floorCurrent + Math.round( progress * floorDiff ) );
@@ -914,7 +994,7 @@ js13k.Level = class {
 
 					W.camera( camStart );
 					js13k.Audio.play( js13k.Audio.DING );
-					js13k.Audio.text( 'ding', '#ff0', 3, W.next.display );
+					js13k.Audio.text( 'ding', 'ff0', 3, W.next.display );
 
 					this.floorCurrent = this.floorNext;
 					this.floorsVisited.push( this.floorCurrent );
@@ -933,6 +1013,47 @@ js13k.Level = class {
 					'y': camStart.y + ( Math.random() * 2 - 1 ) / 300,
 					'z': camStart.z + ( Math.random() * 2 - 1 ) / 300,
 				} );
+
+				return false;
+			};
+		}
+		else if( scene == js13k.SCENE.NEXT_LOOP ) {
+			this.canInteract = false;
+
+			const loop = this.loop;
+			const redStartZ = W.next.e_red.z;
+
+			runner.duration = 3;
+			runner.do = progress => {
+				js13k.Renderer.cameraLocked = true;
+
+				// TODO: fade to black transition, sometimes with (red) still visible
+				// - Just move camera out of elevator and move (red) back to keep same distance?
+				// - Turn all ambient colors black?
+				const cam = {
+					'z': 0,
+					'rx': 0,
+					'ry': 0,
+				};
+
+				if( progress >= 1 ) {
+					js13k.Renderer.cameraLocked = false;
+					W.move( {
+						'n': 'e_red',
+						'z': 100,
+					} );
+					this.loopNext( loop + 1 );
+					setTimeout( () => this.setScene( js13k.SCENE.INTRO ), 1 );
+
+					return true;
+				}
+
+				cam.z = -0.5 * progress;
+				W.move( {
+					'n': 'e_red',
+					'z': redStartZ + cam.z,
+				} );
+				W.camera( cam );
 
 				return false;
 			};

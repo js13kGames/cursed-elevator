@@ -114,7 +114,7 @@ js13k.Assets = {
 		const h = Math.round( w / 2 );
 
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
-		ctx.fillStyle = color;
+		ctx.fillStyle = '#' + color;
 		ctx.font = '36px ' + js13k.FONT_SANS;
 		ctx.textBaseline = 'middle';
 		ctx.fillText( String( text ), w / 2, h / 2 + 6 );
@@ -171,7 +171,7 @@ js13k.Assets = {
 		const h = 50;
 
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
-		ctx.fillStyle = color;
+		ctx.fillStyle = '#' + color;
 		ctx.font = '600 42px ' + js13k.FONT_MONO;
 		ctx.textBaseline = 'middle';
 		ctx.fillText( String( text ), w / 2, h / 2 );

@@ -1,8 +1,6 @@
 // WebGL framework
 // ===============
 
-debug = 1; // Enable shader/program compilation logs (optional)
-
 W = {
 
 	// List of 3D models that can be rendered by the framework
@@ -69,9 +67,7 @@ W = {
 		W.gl.compileShader( t );
 		W.gl.attachShader( W.program, t );
 
-		if( debug ) {
-			console.log( 'vertex shader:', W.gl.getShaderInfoLog( t ) || 'OK' );
-		}
+		// console.log( 'vertex shader:', W.gl.getShaderInfoLog( t ) || 'OK' );
 
 		// Create a Fragment shader
 		// (This GLSL program is called for every fragment (pixel) of the scene)
@@ -120,17 +116,13 @@ W = {
 		W.gl.compileShader( t );
 		W.gl.attachShader( W.program, t );
 
-		if( debug ) {
-			console.log( 'fragment shader:', W.gl.getShaderInfoLog( t ) || 'OK' );
-		}
+		// console.log( 'fragment shader:', W.gl.getShaderInfoLog( t ) || 'OK' );
 
 		// Compile the program
 		W.gl.linkProgram( W.program );
 		W.gl.useProgram( W.program );
 
-		if( debug ) {
-			console.log( 'program:', W.gl.getProgramInfoLog( W.program ) || 'OK' );
-		}
+		// console.log( 'program:', W.gl.getProgramInfoLog( W.program ) || 'OK' );
 
 		// Set the scene's background color (RGBA)
 		W.gl.clearColor( 1, 1, 1, 1 );
