@@ -41,7 +41,7 @@ js13k.Level = class {
 		this.floorCurrent = 1;
 		this.floorNext = 1;
 		this.floorsVisited = [];
-		this.loop = 1;
+		this.loop = 2; // TODO: set to 1
 		this.note = null;
 		this.scene = js13k.SCENE.NORMAL; // TODO: set to TITLE
 
@@ -112,18 +112,39 @@ js13k.Level = class {
 		this._rightDoorClosed = doorWidth / 2 + 0.0025; // leave a very small gap open
 		this._rightDoorOpen = this._rightDoorClosed + this._evX / 2 - this._evX / 3.5;
 
-		// Left door
-		W.cube( {
-			'n': 'dl',
+
+		// Left door area
+
+		W.group( {
+			'n': 'dlg',
 			'g': 'ev',
 			'x': -this._rightDoorOpen,
 			'z': -this._evZ / 2,
+		} );
+
+		W.cube( {
+			'g': 'dlg',
 			'w': doorWidth,
 			'h': this._evY,
 			'd': doorDepth,
 			'b': 'aaa',
 			's': 20,
 		} );
+
+		// Fake shadow
+		W.plane( {
+			'g': 'dlg',
+			'b': '0008',
+			'y': -this._evY / 2 - 0.001,
+			'z': -0.27,
+			'h': 100,
+			'rx': -90,
+			'ry': 20,
+			'ns': 1,
+		} );
+
+
+		// Right door area
 
 		W.group( {
 			'n': 'drg',
@@ -132,15 +153,25 @@ js13k.Level = class {
 			'z': -this._evZ / 2,
 		} );
 
-		// Right door
 		W.cube( {
-			'n': 'dr',
 			'g': 'drg',
 			'w': doorWidth,
 			'h': this._evY,
 			'd': doorDepth,
 			'b': 'aaa',
 			's': 20,
+		} );
+
+		// Fake shadow
+		W.plane( {
+			'g': 'drg',
+			'b': '0008',
+			'y': -this._evY / 2 - 0.001,
+			'z': -0.27,
+			'h': 100,
+			'rx': -90,
+			'ry': -20,
+			'ns': 1,
 		} );
 
 		const noteWidth = doorWidth / 4;
@@ -375,7 +406,7 @@ js13k.Level = class {
 	_buildFloors() {
 		// Dark bottom plane
 		W.plane( {
-			'y': -this._evY / 2,
+			'y': -this._evY / 2 - 0.002,
 			'z': -this._evZ / 2 - 10,
 			'w': 30,
 			'h': 20,
@@ -546,8 +577,20 @@ js13k.Level = class {
 				this.buttonsEnabled.push( 13 );
 			}
 
+			// (blue) first dialog
+			if( floor == 3 ) {
+				this.runners.push( {
+					duration: 2,
+					do: progress => {
+						const pos = W.next.e_blue;
+						this.showDialog( js13k.Assets.texts.blue1, pos, '77f', progress );
+
+						return this.floorCurrent != 3;
+					},
+				} );
+			}
 			// (red) is closer now, next loop
-			if( floor == 13 ) {
+			else if( floor == 13 ) {
 				scene = js13k.SCENE.NEXT_LOOP;
 			}
 		}
@@ -556,8 +599,16 @@ js13k.Level = class {
 				this.buttonsEnabled.push( 13 );
 			}
 
+			// (blue) second dialog
+			if( floor == 3 ) {
+				// TODO:
+			}
+			// (pink) first dialog
+			else if( floor == 7 ) {
+				// TODO:
+			}
 			// Have (red) walk closer, next loop
-			if( floor == 13 ) {
+			else if( floor == 13 ) {
 				const { y: startY, z: startZ } = W.next.e_red;
 				const goalY = 0.3;
 				const goalZ = -1.5;
@@ -591,15 +642,35 @@ js13k.Level = class {
 				this.buttonsEnabled.push( 13 );
 			}
 
+			// (blue) dying
+			if( floor == 3 ) {
+				// TODO:
+			}
+			// (red) among the (pink)
+			else if( floor == 7 ) {
+				// TODO:
+			}
 			// Empty, next loop
-			if( floor == 13 ) {
+			else if( floor == 13 ) {
 				scene = js13k.SCENE.NEXT_LOOP;
 			}
 		}
 		else if( loop == 5 ) {
+			// A different (blue)
+			if( floor == 3 ) {
+				// TODO:
+			}
+			// (red) kills (pink), attacks player
+			else if( floor == 7 ) {
+				// TODO:
+			}
 			// Empty, next loop
-			if( floor == 13 ) {
+			else if( floor == 13 ) {
 				scene = js13k.SCENE.NEXT_LOOP;
+			}
+			// A chance of (red) attacking if floor 7 has already been visited
+			else if( this.floorsVisited.includes( 7 ) && Math.random() < 0.3 ) {
+				// TODO:
 			}
 		}
 		else if( loop == 6 ) {
@@ -638,7 +709,7 @@ js13k.Level = class {
 		this.doors = js13k.STATE.CLOSING;
 
 		W.move( {
-			'n': 'dl',
+			'n': 'dlg',
 			'x': -this._rightDoorClosed,
 			'a': 2000,
 		} );
@@ -667,7 +738,7 @@ js13k.Level = class {
 		this.doors = js13k.STATE.OPENING;
 
 		W.move( {
-			'n': 'dl',
+			'n': 'dlg',
 			'x': -this._rightDoorOpen,
 			'a': 2000,
 		} );
@@ -1112,6 +1183,56 @@ js13k.Level = class {
 		}
 
 		runner.do && this.runners.push( runner );
+	}
+
+
+	/**
+	 *
+	 * @param {string} text
+	 * @param {object} pos
+	 * @param {number} pos.h
+	 * @param {number} pos.x
+	 * @param {number} pos.y
+	 * @param {number} pos.z
+	 * @param {string} color
+	 * @param {number} progress
+	 */
+	showDialog( text, pos, color, progress ) {
+		if( !W.next.dialog ) {
+			[this.cnvDialog, this.ctxDialog] = js13k.Renderer.getOffscreenCanvas( 100, 60, 'dialog' );
+
+			W.billboard( {
+				'n': 'dialog',
+				'ns': 1,
+				't': this.cnvDialog,
+			} );
+		}
+
+		progress = Math.min( progress, 1 );
+
+		this.cnvDialog.width = text.length * 14;
+
+		this.ctxDialog.clearRect( 0, 0, this.cnvDialog.width, this.cnvDialog.height );
+		this.ctxDialog.font = '600 24px ' + js13k.FONT_SANS;
+		this.ctxDialog.textAlign = 'center';
+		this.ctxDialog.fillStyle = '#' + color;
+		this.ctxDialog.fillText(
+			text.substring( 0, progress * text.length ),
+			this.cnvDialog.width / 2, this.cnvDialog.height / 2
+		);
+
+		W.gl.deleteTexture( W.textures.dialog );
+		delete W.textures.dialog;
+
+		W.move( {
+			'n': 'dialog',
+			'x': pos.x,
+			'y': pos.y + pos.h / 2 + 0.1,
+			'z': pos.z,
+			'w': 1,
+			'h': this.cnvDialog.height / this.cnvDialog.width,
+			't': this.cnvDialog,
+		} );
 	}
 
 

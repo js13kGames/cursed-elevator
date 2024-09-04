@@ -175,7 +175,7 @@ W = {
 		if( state.fov ) {
 			const a = 1 / Math.tan( state.fov * Math.PI / 180 );
 			const znear = 0.1;
-			const zfar = 60;
+			const zfar = 80;
 			const farNearDiff = zfar - znear;
 
 			W.projection = new DOMMatrix( [
