@@ -41,7 +41,7 @@ js13k.Level = class {
 		this.floorCurrent = 1;
 		this.floorNext = 1;
 		this.floorsVisited = [];
-		this.loop = 2; // TODO: set to 1
+		this.loop = 3; // TODO: set to 1
 		this.note = null;
 		this.scene = js13k.SCENE.NORMAL; // TODO: set to TITLE
 
@@ -174,16 +174,16 @@ js13k.Level = class {
 			'ns': 1,
 		} );
 
-		const noteWidth = doorWidth / 4;
+		this._noteWidth = doorWidth / 4;
 
 		W.plane( {
 			'n': 's_note1',
 			'g': 'drg',
-			'x': ( noteWidth - doorWidth ) / 2 + 0.1,
+			'x': ( this._noteWidth - doorWidth ) / 2 + 0.1,
 			'y': -0.1,
 			'z': doorDepth / 2 + 0.001,
-			'w': noteWidth,
-			'h': noteWidth * 1.414, // 297 / 210 ~= 1.414
+			'w': this._noteWidth,
+			'h': this._noteWidth * 1.414, // 297 / 210 ~= 1.414
 			'rz': -10,
 			't': js13k.Assets.textures.paper,
 		} );
@@ -424,15 +424,20 @@ js13k.Level = class {
 			'w': 0.5,
 			'h': 0.5 / 4,
 			't': js13k.Assets.getEyesTexture( '•   •', 'f00' ),
+			'ns': 1,
 		} );
 		// (blue)
 		W.plane( {
 			'n': 'e_blue',
-			'y': -0.1,
+			'x': 0.6,
+			'y': -0.4,
 			'z': 100,
 			'w': 0.5,
 			'h': 0.5 / 4,
-			't': js13k.Assets.getEyesTexture( '•   •', '77f' ),
+			'rx': 30,
+			'ry': -45,
+			't': js13k.Assets.getEyesTexture( '•  •', '77f' ),
+			'ns': 1,
 		} );
 		// (pink)
 		W.group( {
@@ -446,6 +451,7 @@ js13k.Level = class {
 			'w': 0.5,
 			'h': 0.5 / 4,
 			't': js13k.Assets.getEyesTexture( '•   •', 'f2c' ),
+			'ns': 1,
 		} );
 	}
 
@@ -579,13 +585,29 @@ js13k.Level = class {
 
 			// (blue) first dialog
 			if( floor == 3 ) {
-				this.runners.push( {
-					duration: 2,
-					do: progress => {
-						const pos = W.next.e_blue;
-						this.showDialog( js13k.Assets.texts.blue1, pos, '77f', progress );
+				// Look to player
+				W.move( {
+					'n': 'e_blue',
+					'rx': 0,
+					'ry': 0,
+					'a': 500,
+					'onAnimDone': () => {
+						this.runners.push( {
+							duration: 2,
+							do: progress => {
+								this.showDialog( js13k.Assets.texts.blue1, W.next.e_blue, '77f', progress );
+		
+								return progress > 2 || this.floorCurrent != 3;
+							},
+						} );
 
-						return this.floorCurrent != 3;
+						// Look away again
+						W.move( {
+							'n': 'e_blue',
+							'rx': 30,
+							'ry': -45,
+							'a': 2000,
+						} );
 					},
 				} );
 			}
@@ -601,7 +623,26 @@ js13k.Level = class {
 
 			// (blue) second dialog
 			if( floor == 3 ) {
-				// TODO:
+				const pos = {
+					x: W.next.e_blue.x,
+					y: W.next.e_blue.y,
+					z: W.next.e_blue.z,
+					h: W.next.e_blue.h,
+				};
+
+				this.runners.push( {
+					duration: 2,
+					do: progress => {
+						this.showDialog( js13k.Assets.texts.blue2, pos, '77f', progress );
+						W.move( {
+							'n': 'e_blue',
+							'x': pos.x + ( Math.random() - 0.5 ) / 50,
+							'y': pos.y + ( Math.random() - 0.5 ) / 100,
+						} );
+
+						return this.elevator == js13k.STATE.MOVING;
+					},
+				} );
 			}
 			// (pink) first dialog
 			else if( floor == 7 ) {
@@ -838,42 +879,44 @@ js13k.Level = class {
 		}
 
 		const o = W.next[target.n];
-		const pos = js13k.getGlobalPos( o );
+		const oGlobal = js13k.getGlobalPos( o );
 		const size = 0.005;
 
 		W.move( {
 			'n': 'hl',
-			'x': pos.x,
-			'y': pos.y,
-			'z': pos.z + 0.01,
+			'x': oGlobal.x,
+			'y': oGlobal.y,
+			'z': oGlobal.z + ( o.ry ? 0 : size * 2 ),
+			'rx': o.rx,
+			'ry': o.ry,
 			'rz': o.rz,
 		} );
 
 		W.move( {
 			'n': 'hl_t',
-			'y': o.h / 2,
-			'w': o.w,
+			'y': oGlobal.h / 2,
+			'w': oGlobal.w,
 			'h': size,
 		} );
 
 		W.move( {
 			'n': 'hl_r',
-			'x': o.w / 2,
-			'h': o.h,
+			'x': oGlobal.w / 2,
+			'h': oGlobal.h,
 			'w': size,
 		} );
 
 		W.move( {
 			'n': 'hl_b',
-			'y': -o.h / 2,
-			'w': o.w,
+			'y': -oGlobal.h / 2,
+			'w': oGlobal.w,
 			'h': size,
 		} );
 
 		W.move( {
 			'n': 'hl_l',
-			'x': -o.w / 2,
-			'h': o.h,
+			'x': -oGlobal.w / 2,
+			'h': oGlobal.h,
 			'w': size,
 		} );
 	}
@@ -885,6 +928,10 @@ js13k.Level = class {
 	 * @returns {boolean}
 	 */
 	isButtonEnabled( n ) {
+		if( !n.startsWith( 'btn' ) ) {
+			return true;
+		}
+
 		return this.buttonsEnabled.includes(
 			Number( n.replace( 'btn', '' ) )
 		);
@@ -943,7 +990,10 @@ js13k.Level = class {
 			}
 		}
 		else if( loop == 3 ) {
-			if( floor == 13 ) {
+			if( floor == 3 ) {
+				blue.z = -4;
+			}
+			else if( floor == 13 ) {
 				red.z = -3;
 			}
 		}
@@ -961,6 +1011,12 @@ js13k.Level = class {
 			//
 		}
 
+		if( W.next.dialog ) {
+			W.move( {
+				'n': 'dialog',
+				'z': 100,
+			} );
+		}
 		W.move( red );
 		W.move( blue );
 	}
@@ -983,7 +1039,43 @@ js13k.Level = class {
 		this.buttonsEnabled = enabledButtons[loop - 1];
 
 		if( loop == 2 ) {
+			W.plane( {
+				'n': 's_note2',
+				'g': 'dlg',
+				'x': 0.3,
+				'y': -0.3,
+				'z': 0.0251,
+				'w': this._noteWidth,
+				'h': this._noteWidth * 1.414,
+				'rz': 20,
+				't': js13k.Assets.textures.paper,
+			} );
+		}
+		else if( loop == 3 ) {
+			W.plane( {
+				'n': 's_note3',
+				'x': this._evX / 2 - 0.03,
+				'y': -0.2,
+				'z': -0.1,
+				'w': this._noteWidth,
+				'h': this._noteWidth * 1.414,
+				'ry': -90,
+				't': js13k.Assets.textures.paper,
+			} );
+		}
+
+		if( loop > 1 ) {
 			W.delete( 's_note1' );
+			W.delete( 'title' ); // TODO: remove, only for developing
+		}
+		if( loop > 2 ) {
+			W.delete( 's_note2' );
+		}
+		if( loop > 3 ) {
+			W.delete( 's_note3' );
+		}
+		if( loop > 4 ) {
+			W.delete( 's_note4' );
 		}
 	}
 
@@ -992,7 +1084,9 @@ js13k.Level = class {
 	 *
 	 */
 	runRunners() {
-		for( let i = this.runners.length - 1; i >= 0; i-- ) {
+		const remove = [];
+
+		for( let i = 0; i < this.runners.length; i++ ) {
 			const runner = this.runners[i];
 			runner.start ??= this.timer;
 
@@ -1000,9 +1094,11 @@ js13k.Level = class {
 
 			// Return something true-ish to remove a runner.
 			if( runner.do( progress ) ) {
-				this.runners.splice( i );
+				remove.push( runner );
 			}
 		}
+
+		this.runners = this.runners.filter( runner => !remove.includes( runner ) );
 	}
 
 
@@ -1072,6 +1168,7 @@ js13k.Level = class {
 
 					this.doorsOpen( () => {
 						this.elevator = js13k.STATE.IDLE;
+						this.setScene( js13k.SCENE.NORMAL );
 						setTimeout( () => this.doFloorAction( this.floorCurrent ), 1 );
 					} );
 

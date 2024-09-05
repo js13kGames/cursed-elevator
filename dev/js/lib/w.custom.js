@@ -154,7 +154,7 @@ W = {
 		}
 
 		// If a new texture is provided, build it and save it in W.textures
-		if( state.t && state.t.width && !W.textures[state.t.id] ) {
+		if( state.t?.width && !W.textures[state.t.id] ) {
 			texture = W.gl.createTexture();
 			W.gl.pixelStorei( 37441 /* UNPACK_PREMULTIPLY_ALPHA_WEBGL */, true );
 			W.gl.bindTexture( 3553 /* TEXTURE_2D */, texture );
@@ -201,7 +201,7 @@ W = {
 				}
 			),
 			...state,
-			'f': 0
+			'f': 0,
 		};
 
 		// Build the model's vertices buffer if it doesn't exist yet
@@ -564,17 +564,13 @@ W = {
 
 	group: t => W.setState( t, 'group' ),
 
-	move: ( t, delay ) => setTimeout( () => { W.setState( t ) }, delay || 1 ),
+	move: t => setTimeout( () => { W.setState( t ) }, 1 ),
 
-	delete: ( t, delay ) => setTimeout( () => { delete W.next[t] }, delay || 1 ),
+	delete: t => setTimeout( () => { delete W.next[t] }, 1 ),
 
-	camera: ( t, delay ) => setTimeout( () => { W.setState( t, t.n = 'camera' ) }, delay || 1 ),
+	camera: t => setTimeout( () => { W.setState( t, t.n = 'camera' ) }, 1 ),
 
-	light: ( t, delay ) => {
-		return delay
-			? setTimeout( () => { W.setState( t, t.n = 'light' ) }, delay )
-			: W.setState( t, t.n = 'light' );
-	},
+	light: t => W.setState( t, t.n = 'light' ),
 };
 
 // Smooth normals computation plug-in (optional)

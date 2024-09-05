@@ -67,6 +67,13 @@ js13k.Renderer = {
 			aabb.max[1] = aabb.min[1] + o.h;
 			aabb.max[2] = aabb.min[2] + d;
 
+			if( o.ry == 90 || o.ry == -90 ) {
+				aabb.min[0] -= o.w / 2;
+				aabb.max[0] += o.w / 2;
+				aabb.min[2] -= o.w / 2;
+				aabb.max[2] += o.w / 2;
+			}
+
 			const hitPoint = this.rayHitsObject( ray, aabb );
 
 			if( hitPoint ) {

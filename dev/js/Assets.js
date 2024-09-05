@@ -17,7 +17,7 @@ js13k.Assets = {
 		's_note5c': 'WHERE IS THE BUTTON',
 		's_note6': 'Lost note book. Is 1 the way out? Got hope.',
 		'blue1': 'Please go. Leave me alone.',
-		'blue2': "Go. Don't it find me.",
+		'blue2': "Go! Don't let it find me.",
 		'blue3': 'not...alone',
 		'blue4': "It won't find me here, right? Why come back? Oh, it smells rotten... Please go. Leave me alone.",
 		'pink1': 'Join us? Safe together. Step out the elevator. Let us huddle together.',

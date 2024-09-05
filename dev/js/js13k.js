@@ -33,11 +33,15 @@ const js13k = {
 
 		const group = W.next[o.g];
 
-		return {
+		const pos = {
 			x: group.x + o.x,
 			y: group.y + o.y,
 			z: group.z + o.z,
+			w: o.w,
+			h: o.h,
 		};
+
+		return pos;
 	},
 
 
