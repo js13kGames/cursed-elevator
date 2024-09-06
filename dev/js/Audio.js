@@ -36,8 +36,6 @@ js13k.Audio = {
 	 * @param {number}  pos.z
 	 */
 	text( text, color, duration, pos ) {
-		text = `*${text}*`;
-
 		const cnv = js13k.Assets.getAudioTexture( text, color );
 		const moveY = 0.01 * duration;
 

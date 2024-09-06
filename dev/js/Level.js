@@ -7,6 +7,8 @@ js13k.SCENE = {
 	INTRO: 2,
 	ELEVATOR_MOVING: 3,
 	NEXT_LOOP: 4,
+	REPEAT_LOOP: 5,
+	OUTRO: 6,
 };
 
 js13k.STATE = {
@@ -38,10 +40,10 @@ js13k.Level = class {
 		this.deaths = 0;
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 6; // TODO: set to 1
+		this.floorCurrent = 2; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
-		this.loop = 5; // TODO: set to 1
+		this.loop = 6; // TODO: set to 1
 		this.note = null;
 		this.scene = js13k.SCENE.NORMAL; // TODO: set to TITLE
 
@@ -133,6 +135,7 @@ js13k.Level = class {
 
 		// Fake shadow
 		W.plane( {
+			'n': 'dsl',
 			'g': 'dlg',
 			'b': '0008',
 			'y': -this._evY / 2 - 0.001,
@@ -164,6 +167,7 @@ js13k.Level = class {
 
 		// Fake shadow
 		W.plane( {
+			'n': 'dsr',
 			'g': 'drg',
 			'b': '0008',
 			'y': -this._evY / 2 - 0.001,
@@ -337,9 +341,10 @@ js13k.Level = class {
 			'g': g,
 			'x': -this._evX / 2 + 0.02,
 			'y': -this._evY / 5,
+			'z': 0.025,
 			'w': 0.04,
 			'h': 0.15,
-			'd': this._evZ,
+			'd': this._evZ - 0.15,
 			'b': 'aaa',
 			's': 30,
 		} );
@@ -348,9 +353,10 @@ js13k.Level = class {
 			'g': g,
 			'x': this._evX / 2 - 0.02,
 			'y': -this._evY / 5,
+			'z': 0.025,
 			'w': 0.04,
 			'h': 0.15,
-			'd': this._evZ,
+			'd': this._evZ - 0.15,
 			'b': 'aaa',
 			's': 30,
 		} );
@@ -359,7 +365,7 @@ js13k.Level = class {
 			'g': g,
 			'y': -this._evY / 5,
 			'z': this._evZ / 2 - 0.02,
-			'w': this._evX,
+			'w': this._evX - 0.15,
 			'h': 0.15,
 			'd': 0.04,
 			'b': 'aaa',
@@ -416,6 +422,7 @@ js13k.Level = class {
 	_buildFloors() {
 		// Dark bottom plane
 		W.plane( {
+			'n': 'plane',
 			'y': -this._evY / 2 - 0.002,
 			'z': -this._evZ / 2 - 10,
 			'w': 30,
@@ -678,7 +685,7 @@ js13k.Level = class {
 							duration: 2,
 							do: progress => {
 								this.showDialog( js13k.Assets.texts.blue1, W.next.e_blue, '77f', progress );
-		
+
 								return progress > 2 || this.floorCurrent != 3;
 							},
 						} );
@@ -838,22 +845,122 @@ js13k.Level = class {
 					},
 				} );
 
-				// TODO: animate (red) to look at player, then attack
-				// TODO: if player does not close doors before runner.duration expires, game over (loop restart)
+				// (red) looks towards player
+				W.move( {
+					'n': 'e_red',
+					'rx': 0,
+					'ry': 0,
+					'rz': 0,
+					'a': 700,
+					'onAnimDone': () => {
+						const {
+							x: startX,
+							y: startY,
+							z: startZ
+						} = W.next.e_red;
+
+						// (red) moves towards player
+						this.runners.push( {
+							duration: 5,
+							do: progress => {
+								if( this.doors == js13k.STATE.CLOSED ) {
+									// TODO: play audio
+									// TODO: screen shake?
+									js13k.Audio.text(
+										'*thud*', 'f00', 3,
+										{
+											x: 0,
+											y: 0.1,
+											z: -1,
+										}
+									);
+
+									W.move( {
+										'n': 'e_red',
+										'z': 100,
+									} );
+
+									return true;
+								}
+
+								// Didn't close doors on time
+								if( progress > 1 ) {
+									this.setScene( js13k.SCENE.REPEAT_LOOP );
+									return true;
+								}
+
+								W.move( {
+									'n': 'e_red',
+									'x': ( 1 - progress ) * startX,
+									'y': ( 1 - progress ) * startY,
+									'z': ( 1 - progress ) * ( startZ + 1 ) - 1,
+								} );
+
+								return false;
+							},
+						} );
+					},
+				} );
 			}
 			// Empty, next loop
 			else if( floor == 13 ) {
 				scene = js13k.SCENE.NEXT_LOOP;
 			}
 			// A chance of (red) attacking if floor 7 has already been visited
-			else if( this.floorsVisited.includes( 7 ) && Math.random() < 0.3 ) {
-				// TODO:
+			// Except for the floor where the button can be found
+			else if( floor != 8 && this.floorsVisited.includes( 7 ) && Math.random() < 0.3 ) {
+				W.move( {
+					'n': 'e_red',
+					'x': 0,
+					'y': 0.5,
+					'z': -3,
+				} );
+
+				// (red) moves towards player
+				this.runners.push( {
+					duration: 5,
+					do: progress => {
+						if( this.doors == js13k.STATE.CLOSED ) {
+							// TODO: play audio
+							// TODO: screen shake?
+							js13k.Audio.text(
+								'*thud*', 'f00', 3,
+								{
+									x: 0,
+									y: 0.1,
+									z: -1,
+								}
+							);
+
+							W.move( {
+								'n': 'e_red',
+								'z': 100,
+							} );
+
+							return true;
+						}
+
+						// Didn't close doors on time
+						if( progress > 1 ) {
+							this.setScene( js13k.SCENE.REPEAT_LOOP );
+							return true;
+						}
+
+						W.move( {
+							'n': 'e_red',
+							'y': ( 1 - progress ) * 0.5,
+							'z': ( 1 - progress ) * -2 - 1,
+						} );
+
+						return false;
+					},
+				} );
 			}
 		}
 		else if( loop == 6 ) {
 			// Ending
 			if( floor == 1 ) {
-				// TODO: outro animation
+				scene = js13k.SCENE.OUTRO;
 			}
 		}
 
@@ -960,7 +1067,7 @@ js13k.Level = class {
 				}
 
 				js13k.Audio.play( js13k.Audio.BUTTON );
-				js13k.Audio.text( 'beep', 'ff0', 1, o );
+				js13k.Audio.text( '*beep*', 'ff0', 1, o );
 
 				const floor = Number( o.n.substring( 3 ) );
 
@@ -1014,7 +1121,7 @@ js13k.Level = class {
 	 */
 	highlight( target ) {
 		if( !target || !this.isButtonEnabled( target.n ) ) {
-			if( this.loop == 5 && target?.n != 'btn13' ) {
+			if( !target || ( this.loop == 5 && target.n != 'btn13' ) ) {
 				W.move( {
 					'n': 'hl',
 					'z': 100,
@@ -1314,6 +1421,12 @@ js13k.Level = class {
 				't': js13k.Assets.getEyesTexture( '•  •', '7ae' ),
 			} );
 		}
+		else if( loop == 6 ) {
+			W.clearColor( 'eee' );
+			W.delete( 'plane' );
+			W.delete( 'dsl' );
+			W.delete( 'dsr' );
+		}
 
 		if( loop > 1 ) {
 			W.delete( 's_note1' );
@@ -1394,6 +1507,7 @@ js13k.Level = class {
 		this.scene = scene;
 		this.canInteract = true;
 
+		const loop = this.loop;
 		const runner = {};
 
 		if( scene == js13k.SCENE.ELEVATOR_MOVING ) {
@@ -1424,7 +1538,7 @@ js13k.Level = class {
 
 					W.camera( camStart );
 					js13k.Audio.play( js13k.Audio.DING );
-					js13k.Audio.text( 'ding', 'ff0', 3, W.next.display );
+					js13k.Audio.text( '*ding*', 'ff0', 3, W.next.display );
 
 					this.floorCurrent = this.floorNext;
 					this.floorsVisited.push( this.floorCurrent );
@@ -1451,7 +1565,6 @@ js13k.Level = class {
 		else if( scene == js13k.SCENE.NEXT_LOOP ) {
 			this.canInteract = false;
 
-			const loop = this.loop;
 			const redStartZ = W.next.e_red.z;
 
 			runner.duration = 3;
@@ -1468,11 +1581,11 @@ js13k.Level = class {
 				};
 
 				if( progress >= 1 ) {
-					js13k.Renderer.cameraLocked = false;
 					W.move( {
 						'n': 'e_red',
 						'z': 100,
 					} );
+					js13k.Renderer.cameraLocked = false;
 					this.loopNext( loop + 1 );
 					setTimeout( () => this.setScene( js13k.SCENE.INTRO ), 1 );
 
@@ -1485,6 +1598,30 @@ js13k.Level = class {
 					'z': redStartZ + cam.z,
 				} );
 				W.camera( cam );
+
+				return false;
+			};
+		}
+		else if( scene == js13k.SCENE.REPEAT_LOOP ) {
+			this.canInteract = false;
+
+			runner.duration = 3;
+			runner.do = progress => {
+				js13k.Renderer.cameraLocked = true;
+
+				if( progress > 1 ) {
+					js13k.Renderer.cameraLocked = false;
+					this.loopNext( loop );
+					setTimeout( () => this.setScene( js13k.SCENE.INTRO ), 1 );
+
+					return true;
+				}
+
+				js13k.Renderer.ctxUI.fillStyle = `rgba(0,0,0,${progress})`;
+				js13k.Renderer.ctxUI.fillRect(
+					0, 0,
+					js13k.Renderer.cnvUI.width, js13k.Renderer.cnvUI.height
+				);
 
 				return false;
 			};
@@ -1540,6 +1677,47 @@ js13k.Level = class {
 
 				return progress >= 1;
 			};
+		}
+		else if( scene == js13k.SCENE.OUTRO ) {
+			// Hide pointer
+			document.getElementById( 'p' ).hidden = true;
+			this.canInteract = false;
+			js13k.Renderer.cameraLocked = true;
+
+			W.camera( {
+				'rx': 0,
+				'ry': 0,
+				'a': 1000,
+				'onAnimDone': () => {
+					runner.duration = 5;
+					runner.do = progress => {
+						// Wait a moment before actually doing anything
+						if( progress < 0.2 ) {
+							return false;
+						}
+
+						progress -= 0.2;
+
+						W.camera( { 'z': progress * -2 } );
+
+						const alpha = Math.min( progress, 1 );
+						const w = js13k.Renderer.cnvUI.width;
+						const h = js13k.Renderer.cnvUI.height;
+
+						js13k.Renderer.ctxUI.fillStyle = `rgba(238,238,238,${alpha})`;
+						js13k.Renderer.ctxUI.fillRect( 0, 0, w, h );
+
+						js13k.Renderer.ctxUI.font = '96px ' + js13k.FONT_SERIF;
+						js13k.Renderer.ctxUI.textAlign = 'center';
+						js13k.Renderer.ctxUI.fillStyle = `rgba(110,110,110,${alpha})`;
+						js13k.Renderer.ctxUI.fillText( 'ESCAPED', w / 2, h / 2 );
+
+						return false;
+					};
+
+					this.runners.push( runner );
+				},
+			} );
 		}
 
 		runner.do && this.runners.push( runner );
