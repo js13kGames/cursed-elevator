@@ -40,10 +40,10 @@ js13k.Level = class {
 		this.deaths = 0;
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 2; // TODO: set to 1
+		this.floorCurrent = 6; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
-		this.loop = 6; // TODO: set to 1
+		this.loop = 3; // TODO: set to 1
 		this.note = null;
 		this.scene = js13k.SCENE.NORMAL; // TODO: set to TITLE
 
@@ -375,6 +375,7 @@ js13k.Level = class {
 		// front, left side
 		W.cube( {
 			'g': g,
+			'n': 's__fl',
 			'x': -( this._evX - this._evX / 4.5 ) / 2,
 			'z': -this._evZ / 2,
 			'w': this._evX / 4.5,
@@ -735,14 +736,32 @@ js13k.Level = class {
 			}
 			// (pink) first dialog
 			else if( floor == 7 ) {
-				this.runners.push( {
-					duration: 2,
-					do: progress => {
-						this.showDialog( js13k.Assets.texts.pink1, W.next.e_pink1, 'f2c', progress );
+				const y = W.next.e_pink1.y;
 
-						return progress > 1;
+				this.runners.push(
+					{
+						duration: 5,
+						do: progress => {
+							this.showDialog( js13k.Assets.texts.pink1, W.next.e_pink1, 'f2c', progress );
+
+							return progress > 1;
+						},
 					},
-				} );
+					{
+						duration: 10,
+						do: progress => {
+							const f = ( Math.sin( Math.PI * 10 * progress ) + 1 ) / 2;
+
+							W.move( {
+								'n': 'e_pink1',
+								'y': y - f * 0.025,
+								'rx': f * 40,
+							} );
+
+							return progress > 1 || this.elevator == js13k.STATE.MOVING;
+						},
+					},
+				);
 			}
 			// Have (red) walk closer, next loop
 			else if( floor == 13 ) {
@@ -761,7 +780,7 @@ js13k.Level = class {
 							'z': startZ + diffZ * progress,
 						} );
 
-						if( progress >= 1 ) {
+						if( progress > 1 ) {
 							this.setScene( js13k.SCENE.NEXT_LOOP );
 
 							return true;
@@ -863,29 +882,7 @@ js13k.Level = class {
 						this.runners.push( {
 							duration: 5,
 							do: progress => {
-								if( this.doors == js13k.STATE.CLOSED ) {
-									// TODO: play audio
-									// TODO: screen shake?
-									js13k.Audio.text(
-										'*thud*', 'f00', 3,
-										{
-											x: 0,
-											y: 0.1,
-											z: -1,
-										}
-									);
-
-									W.move( {
-										'n': 'e_red',
-										'z': 100,
-									} );
-
-									return true;
-								}
-
-								// Didn't close doors on time
-								if( progress > 1 ) {
-									this.setScene( js13k.SCENE.REPEAT_LOOP );
+								if( this.handleRedAttack( progress ) ) {
 									return true;
 								}
 
@@ -920,29 +917,7 @@ js13k.Level = class {
 				this.runners.push( {
 					duration: 5,
 					do: progress => {
-						if( this.doors == js13k.STATE.CLOSED ) {
-							// TODO: play audio
-							// TODO: screen shake?
-							js13k.Audio.text(
-								'*thud*', 'f00', 3,
-								{
-									x: 0,
-									y: 0.1,
-									z: -1,
-								}
-							);
-
-							W.move( {
-								'n': 'e_red',
-								'z': 100,
-							} );
-
-							return true;
-						}
-
-						// Didn't close doors on time
-						if( progress > 1 ) {
-							this.setScene( js13k.SCENE.REPEAT_LOOP );
+						if( this.handleRedAttack( progress ) ) {
 							return true;
 						}
 
@@ -992,6 +967,8 @@ js13k.Level = class {
 
 		this.doors = js13k.STATE.CLOSING;
 
+		js13k.Audio.play( js13k.Audio.DOORS );
+
 		W.move( {
 			'n': 'dlg',
 			'x': -this._rightDoorClosed,
@@ -1003,7 +980,7 @@ js13k.Level = class {
 			'a': 2000,
 			'onAnimDone': () => {
 				this.doors = js13k.STATE.CLOSED;
-				cb?.();
+				setTimeout( () => cb?.(), 800 );
 			},
 		} );
 	}
@@ -1021,20 +998,79 @@ js13k.Level = class {
 
 		this.doors = js13k.STATE.OPENING;
 
-		W.move( {
-			'n': 'dlg',
-			'x': -this._rightDoorOpen,
-			'a': 2000,
-		} );
-		W.move( {
-			'n': 'drg',
-			'x': this._rightDoorOpen,
-			'a': 2000,
-			'onAnimDone': () => {
-				this.doors = js13k.STATE.OPEN;
-				cb?.();
-			},
-		} );
+		setTimeout( () => {
+			js13k.Audio.play( js13k.Audio.DOORS );
+
+			W.move( {
+				'n': 'dlg',
+				'x': -this._rightDoorOpen,
+				'a': 2000,
+			} );
+			W.move( {
+				'n': 'drg',
+				'x': this._rightDoorOpen,
+				'a': 2000,
+				'onAnimDone': () => {
+					this.doors = js13k.STATE.OPEN;
+					cb?.();
+				},
+			} );
+		}, 800 );
+	}
+
+
+	/**
+	 *
+	 * @param {number} progress
+	 * @returns {boolean}
+	 */
+	handleRedAttack( progress ) {
+		if( this.doors == js13k.STATE.CLOSED ) {
+			js13k.Audio.play( js13k.Audio.THUD );
+			js13k.Audio.text(
+				'*thud*', 'f00', 3,
+				{
+					x: 0,
+					y: 0.1,
+					z: -1,
+				}
+			);
+
+			const camStart = {
+				'x': W.next.camera.x,
+				'y': W.next.camera.y,
+				'z': W.next.camera.z,
+			};
+
+			// Short screen shake
+			this.runners.push( {
+				duration: 0.7,
+				do: progress => {
+					W.camera( {
+						'x': camStart.x + ( Math.random() * 2 - 1 ) / 300,
+						'y': camStart.y + ( Math.random() * 2 - 1 ) / 300,
+						'z': camStart.z + ( Math.random() * 2 - 1 ) / 300,
+					} );
+
+					return progress > 1;
+				},
+			} );
+
+			W.move( {
+				'n': 'e_red',
+				'z': 100,
+			} );
+
+			return true;
+		}
+
+		// Didn't close doors on time
+		if( progress > 1 ) {
+			this.setScene( js13k.SCENE.REPEAT_LOOP );
+			return true;
+		}
+
+		return false;
 	}
 
 
@@ -1121,7 +1157,7 @@ js13k.Level = class {
 	 */
 	highlight( target ) {
 		if( !target || !this.isButtonEnabled( target.n ) ) {
-			if( !target || ( this.loop == 5 && target.n != 'btn13' ) ) {
+			if( !target || this.loop != 5 || target.n != 'btn13' ) {
 				W.move( {
 					'n': 'hl',
 					'z': 100,
@@ -1530,6 +1566,8 @@ js13k.Level = class {
 			const floorDiff = this.floorNext - this.floorCurrent;
 			runner.duration = Math.min( 5, 1.2 * Math.abs( floorDiff ) );
 
+			js13k.Audio.play( js13k.Audio.ELEVATOR, runner.duration );
+
 			runner.do = progress => {
 				this.setDisplay( this.floorCurrent + Math.round( progress * floorDiff ) );
 
@@ -1580,7 +1618,7 @@ js13k.Level = class {
 					'ry': 0,
 				};
 
-				if( progress >= 1 ) {
+				if( progress > 1 ) {
 					W.move( {
 						'n': 'e_red',
 						'z': 100,
@@ -1671,11 +1709,11 @@ js13k.Level = class {
 				js13k.Renderer.cameraLocked = true;
 				W.camera( { 'z': -0.5, 'rx': 0, 'ry': 0 } );
 
-				if( progress >= 1 ) {
+				if( progress > 1 ) {
 					setTimeout( () => this.setScene( js13k.SCENE.INTRO ), 1 );
 				}
 
-				return progress >= 1;
+				return progress > 1;
 			};
 		}
 		else if( scene == js13k.SCENE.OUTRO ) {
@@ -1726,18 +1764,18 @@ js13k.Level = class {
 
 	/**
 	 *
-	 * @param {string} text
-	 * @param {object} pos
-	 * @param {number} pos.h
-	 * @param {number} pos.x
-	 * @param {number} pos.y
-	 * @param {number} pos.z
-	 * @param {string} color
-	 * @param {number} progress
+	 * @param {string[]} lines
+	 * @param {object}   pos
+	 * @param {number}   pos.h
+	 * @param {number}   pos.x
+	 * @param {number}   pos.y
+	 * @param {number}   pos.z
+	 * @param {string}   color
+	 * @param {number}   progress
 	 */
-	showDialog( text, pos, color, progress ) {
+	showDialog( lines, pos, color, progress ) {
 		if( !W.next.dialog ) {
-			[this.cnvDialog, this.ctxDialog] = js13k.Renderer.getOffscreenCanvas( 100, 60, 'dialog' );
+			[this.cnvDialog, this.ctxDialog] = js13k.Renderer.getOffscreenCanvas( 2, 2, 'dialog' );
 
 			W.billboard( {
 				'n': 'dialog',
@@ -1748,32 +1786,65 @@ js13k.Level = class {
 
 		progress = Math.min( progress, 1 );
 
-		this.cnvDialog.width = text.length * 14;
+		let total = 0;
+		let longest = 0;
+
+		for( let i = 0; i < lines.length; i++ ) {
+			const text = lines[i];
+			total += text.length;
+			longest = Math.max( longest, text.length );
+		}
+
+		this.cnvDialog.width = longest * 14;
+		this.cnvDialog.height = lines.length * 30;
 
 		this.ctxDialog.clearRect( 0, 0, this.cnvDialog.width, this.cnvDialog.height );
 		this.ctxDialog.font = '600 24px ' + js13k.FONT_SANS;
 		this.ctxDialog.textAlign = 'center';
+		this.ctxDialog.textBaseline = 'top';
 		this.ctxDialog.fillStyle = '#' + color;
-		this.ctxDialog.fillText(
-			text.substring( 0, progress * text.length ),
-			this.cnvDialog.width / 2, this.cnvDialog.height / 2
-		);
+
+		const textPos = Math.round( progress * total );
+		let shown = 0;
+		let linesDiff = lines.length;
+		let lastChar = '';
+
+		for( let i = 0; i < lines.length; i++ ) {
+			const text = lines[i].substring( 0, textPos - shown );
+			shown += text.length;
+			linesDiff--;
+			lastChar = text[text.length - 1];
+
+			this.ctxDialog.fillText( text, this.cnvDialog.width / 2, i * 30 );
+
+			if( shown >= textPos ) {
+				break;
+			}
+		}
 
 		W.gl.deleteTexture( W.textures.dialog );
 		delete W.textures.dialog;
 
 		const globalPos = js13k.getGlobalPos( pos );
-		const w = this.cnvDialog.width / 400;
+		const relH = 30 / 400 * linesDiff;
 
 		W.move( {
 			'n': 'dialog',
 			'x': globalPos.x,
-			'y': globalPos.y + globalPos.h / 2 + 0.1,
+			'y': globalPos.y + globalPos.h / 2 + 0.1 - relH,
 			'z': globalPos.z,
-			'w': w,
-			'h': w * ( this.cnvDialog.height / this.cnvDialog.width ),
+			'w': this.cnvDialog.width / 400,
+			'h': this.cnvDialog.height / 400,
 			't': this.cnvDialog,
 		} );
+
+		if( ( this._lastDialogTextPos || 0 ) < textPos ) {
+			this._lastDialogTextPos = textPos;
+
+			if( lastChar != ' ' ) {
+				js13k.Audio.play( js13k.Audio.TALKING );
+			}
+		}
 	}
 
 

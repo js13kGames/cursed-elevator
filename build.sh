@@ -25,6 +25,15 @@ tr -d '\n' < 'index-dev.html' > 'index.html'
 sed -i'' 's/js\/js13k\.js/i.js/' 'index.html'
 sed -E -i'' 's/<script src="([a-zA-Z0-9_-]+\/)+[a-zA-Z0-9_.-]{2,}\.js"><\/script>//g' 'index.html'
 
+# Replace "const" with "let" to allow
+# better minification and compression
+for f in lib/*.js; do
+	sed -i'' 's/const /let /' "$f"
+done
+for f in *.js; do
+	sed -i'' 's/const /let /' "$f"
+done
+
 # Minify and combine the JS files.
 terser \
 	'lib/pxtex.min.js' \
