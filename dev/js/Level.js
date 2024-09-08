@@ -43,7 +43,7 @@ js13k.Level = class {
 		this.floorCurrent = 1; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
-		this.loop = 6; // TODO: set to 1
+		this.loop = 1; // TODO: set to 1
 		// this.note = null;
 		// this.scene = null;
 
@@ -68,6 +68,7 @@ js13k.Level = class {
 		this._buildElevatorDisplay();
 		this._buildElevatorNumberPad();
 		this._buildFloors();
+		this._buildLoopCounter();
 		this._buildHighlight();
 
 		this.setDisplay( this.floorCurrent );
@@ -589,6 +590,33 @@ js13k.Level = class {
 			'size': size,
 			'b': color,
 			'ns': 1,
+		} );
+	}
+
+
+	/**
+	 *
+	 * @private
+	 */
+	_buildLoopCounter() {
+		[this.cnvLoopCounter, this.ctxLoopCounter] = js13k.Renderer.getOffscreenCanvas( 120, 60, 'loops' );
+		this.ctxLoopCounter.font = '48px ' + js13k.FONT_SERIF;
+		this.ctxLoopCounter.fillStyle = '#999';
+		this.ctxLoopCounter.textAlign = 'left';
+		this.ctxLoopCounter.textBaseline = 'top';
+		this.ctxLoopCounter.fillText( '𝍪', 0, 0 );
+
+		// Starts appearing on 2nd loop
+		W.plane( {
+			'n': 'loops',
+			'g': 'drg',
+			'x': -0.47,
+			'y': 0.4,
+			'z': 100,
+			'w': 0.2,
+			'h': 0.1,
+			'rz': 5,
+			't': this.cnvLoopCounter,
 		} );
 	}
 
@@ -1429,6 +1457,8 @@ js13k.Level = class {
 				'ry': -90,
 				't': js13k.Assets.textures.paper,
 			} );
+
+			this.updateLoopCounter( '𝍫' );
 		}
 		else if( loop == 4 ) {
 			W.plane( {
@@ -1443,6 +1473,8 @@ js13k.Level = class {
 				'b': '000',
 				'mix': 0.7,
 			} );
+
+			this.updateLoopCounter( '𝍬' );
 		}
 		else if( loop == 5 ) {
 			W.move( {
@@ -1461,6 +1493,8 @@ js13k.Level = class {
 				'ry': -45,
 				't': js13k.Assets.getEyesTexture( '•  •', '7ae' ),
 			} );
+
+			this.updateLoopCounter( '𝍸' );
 		}
 		else if( loop == 6 ) {
 			const [cnvNote, ctxNote] = js13k.Renderer.getOffscreenCanvas( 600, 100, 'note6' );
@@ -1488,9 +1522,16 @@ js13k.Level = class {
 			W.delete( 'plane' );
 			W.delete( 'dsl' );
 			W.delete( 'dsr' );
+
+			this.updateLoopCounter( '𝍸𝍩' );
 		}
 
 		if( loop > 1 ) {
+			W.move( {
+				'n': 'loops',
+				'z': 0.0251,
+			} );
+
 			W.delete( 's_note1' );
 			W.delete( 'title' ); // TODO: remove, only for developing
 		}
@@ -1903,6 +1944,27 @@ js13k.Level = class {
 		else if( this.canInteract && this.elevator == js13k.STATE.IDLE ) {
 			this._checkSelections();
 		}
+	}
+
+
+	/**
+	 *
+	 * @param {string} text
+	 */
+	updateLoopCounter( text ) {
+		this.ctxLoopCounter.clearRect(
+			0, 0,
+			this.cnvLoopCounter.width, this.cnvLoopCounter.height
+		);
+		this.ctxLoopCounter.fillText( text, 0, 0 );
+
+		W.gl.deleteTexture( W.textures.loops );
+		delete W.textures.loops;
+
+		W.move( {
+			'n': 'loops',
+			't': this.cnvLoopCounter,
+		} );
 	}
 
 

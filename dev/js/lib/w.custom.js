@@ -55,7 +55,7 @@ W = {
 			'void main() {' +
 				'gl_Position = pv * (' +
 					'v_pos = bb.z > 0.' +
-					'? m[3] + eye * (pos * bb)' +
+					'? m[3] + eye * pos * bb' +
 					': m * pos' +
 				');' +
 				'v_col = col;' +
