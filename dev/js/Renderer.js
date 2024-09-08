@@ -90,8 +90,9 @@ js13k.Renderer = {
 	/**
 	 *
 	 * @param {string[]} lines
+	 * @param {string}   color
 	 */
-	drawNote( lines ) {
+	drawNote( lines, color ) {
 		const w = 520;
 		const h = Math.round( Math.min( w * 1.414, window.innerHeight - 40 ) );
 
@@ -99,7 +100,7 @@ js13k.Renderer = {
 		const y = ( this.cnvUI.height - h ) / 2;
 
 		this.ctxUI.drawImage( js13k.Assets.textures.paper, x, y, w, h );
-		this.ctxUI.fillStyle = '#000';
+		this.ctxUI.fillStyle = color || '#000';
 		this.ctxUI.font = '24px ' + js13k.FONT_SANS;
 		this.ctxUI.textAlign = 'left';
 		this.ctxUI.textBaseline = 'top';

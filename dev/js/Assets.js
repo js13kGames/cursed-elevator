@@ -36,9 +36,17 @@ js13k.Assets = {
 			"Here's a survival tip: You can close the doors.",
 			'Hit the "><" button or go to another floor.',
 		],
-		's_note5a': ['NO MORE REPEATS'],
-		's_note5b': ['SICK OF PAIN'],
-		's_note5c': ['WHERE IS THE BUTTON'],
+		's_note5a': new Array( 24 ).fill( 'NO MORE REPEATS NO MORE REPEATS' ),
+		's_note5b': [
+			'SICK OF PAIN SICK OF PAIN SICK OF',
+			'PAIN SO SICK OF PAIN! NO MORE BITING!',
+			'STAY HERE, KEEP THE DOORS CLOSED',
+			'FOREVER? OR CAN I HIDE BETTER IN',
+			'THE DARK?',
+		],
+		's_note5c': [
+			'WHERE IS THE BUTTON?!',
+		],
 		's_note6': [
 			'Lost note book. Is 1 the way out?',
 			'Hope',

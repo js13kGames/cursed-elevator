@@ -43,7 +43,7 @@ js13k.Level = class {
 		this.floorCurrent = 1; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
-		this.loop = 1; // TODO: set to 1
+		this.loop = 5; // TODO: set to 1
 		// this.note = null;
 		// this.scene = null;
 
@@ -1477,6 +1477,35 @@ js13k.Level = class {
 			this.updateLoopCounter( '𝍬' );
 		}
 		else if( loop == 5 ) {
+			W.plane( {
+				'n': 's_note5c',
+				'x': this._evX / 2 - 0.03,
+				'y': -0.2,
+				'z': -0.1,
+				'w': this._noteWidth,
+				'h': this._noteWidth * 1.414,
+				'ry': -90,
+				't': js13k.Assets.textures.paper,
+			} );
+			W.plane( {
+				'n': 's_note5b',
+				'x': this._evX / 2 - 0.031,
+				'y': -0.1,
+				'z': 0.18,
+				'w': this._noteWidth,
+				'h': this._noteWidth * 1.414,
+				'ry': -90,
+				't': js13k.Assets.textures.paper,
+			} );
+			W.plane( {
+				'n': 's_note5a',
+				'x': -this._evX / 2 + 0.031,
+				'w': this._noteWidth,
+				'h': this._noteWidth * 1.414,
+				'ry': 90,
+				't': js13k.Assets.textures.paper,
+			} );
+
 			W.move( {
 				'n': 'btn13',
 				'z': 100,
@@ -1935,7 +1964,8 @@ js13k.Level = class {
 
 		if( this.note ) {
 			const text = js13k.Assets.texts[this.note];
-			js13k.Renderer.drawNote( text );
+			const color = ['s_note4', 's_note5a', 's_note5b', 's_note5c'].includes( this.note ) && '#13d';
+			js13k.Renderer.drawNote( text, color );
 
 			if( js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true ) ) {
 				this.note = null;
