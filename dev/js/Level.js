@@ -37,15 +37,15 @@ js13k.Level = class {
 		this.timer = 0;
 
 		this.buttonsEnabled = [];
-		this.deaths = 0;
+		this.deaths = 0; // TODO: remove if unused
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 6; // TODO: set to 1
+		this.floorCurrent = 1; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
-		this.loop = 3; // TODO: set to 1
-		this.note = null;
-		this.scene = js13k.SCENE.NORMAL; // TODO: set to TITLE
+		this.loop = 1; // TODO: set to 1
+		// this.note = null;
+		// this.scene = null;
 
 		this._evX = 2.5;
 		this._evY = 3;
@@ -73,6 +73,7 @@ js13k.Level = class {
 		this.setDisplay( this.floorCurrent );
 		this.prepareLoop( this.loop );
 		this.prepareFloor( this.floorCurrent );
+		this.setScene( js13k.SCENE.TITLE );
 	}
 
 
@@ -1066,7 +1067,9 @@ js13k.Level = class {
 
 		// Didn't close doors on time
 		if( progress > 1 ) {
+			this.deaths++;
 			this.setScene( js13k.SCENE.REPEAT_LOOP );
+
 			return true;
 		}
 
@@ -1702,18 +1705,29 @@ js13k.Level = class {
 		else if( scene == js13k.SCENE.TITLE ) {
 			// Hide pointer
 			document.getElementById( 'p' ).hidden = true;
+
+			document.body.classList.add( 'p' );
 			this.canInteract = false;
 
-			runner.duration = 3;
-			runner.do = progress => {
-				js13k.Renderer.cameraLocked = true;
-				W.camera( { 'z': -0.5, 'rx': 0, 'ry': 0 } );
+			js13k.Renderer.cameraLocked = true;
+			W.camera( { 'z': -0.5, 'rx': 0, 'ry': 0 } );
 
-				if( progress > 1 ) {
-					setTimeout( () => this.setScene( js13k.SCENE.INTRO ), 1 );
-				}
+			const btn = document.getElementById( 'b' );
+			btn.onclick = () => {
+				btn.remove();
 
-				return progress > 1;
+				document.body.classList.remove( 'p' );
+
+				this.runners.push( {
+					duration: 1,
+					do: progress => {
+						if( progress > 1 ) {
+							setTimeout( () => this.setScene( js13k.SCENE.INTRO ), 1 );
+						}
+	
+						return progress > 1;
+					},
+				} );
 			};
 		}
 		else if( scene == js13k.SCENE.OUTRO ) {
