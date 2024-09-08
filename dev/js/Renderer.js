@@ -89,9 +89,9 @@ js13k.Renderer = {
 
 	/**
 	 *
-	 * @param {string[]} text
+	 * @param {string[]} lines
 	 */
-	drawNote( text ) {
+	drawNote( lines ) {
 		const w = 520;
 		const h = Math.round( Math.min( w * 1.414, window.innerHeight - 40 ) );
 
@@ -104,8 +104,8 @@ js13k.Renderer = {
 		this.ctxUI.textAlign = 'left';
 		this.ctxUI.textBaseline = 'top';
 
-		for( let i = 0; i < text.length; i++ ) {
-			this.ctxUI.fillText( text[i], x + 20, y + 20 + i * 29 );
+		for( let i = 0; i < lines.length; i++ ) {
+			this.ctxUI.fillText( lines[i], x + 20, y + 20 + i * 29 );
 		}
 	},
 

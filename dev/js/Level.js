@@ -43,7 +43,7 @@ js13k.Level = class {
 		this.floorCurrent = 1; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
-		this.loop = 1; // TODO: set to 1
+		this.loop = 6; // TODO: set to 1
 		// this.note = null;
 		// this.scene = null;
 
@@ -73,7 +73,9 @@ js13k.Level = class {
 		this.setDisplay( this.floorCurrent );
 		this.prepareLoop( this.loop );
 		this.prepareFloor( this.floorCurrent );
-		this.setScene( js13k.SCENE.TITLE );
+
+		document.getElementById( 'b' ).remove(); // TODO: remove
+		// this.setScene( js13k.SCENE.TITLE ); // TODO: uncomment
 	}
 
 
@@ -1461,6 +1463,27 @@ js13k.Level = class {
 			} );
 		}
 		else if( loop == 6 ) {
+			const [cnvNote, ctxNote] = js13k.Renderer.getOffscreenCanvas( 600, 100, 'note6' );
+			ctxNote.font = 'italic 32px ' + js13k.SERIF;
+			ctxNote.fillStyle = '#555';
+			ctxNote.textBaseline = 'top';
+
+			const lines = js13k.Assets.texts.s_note6;
+
+			for( let i = 0; i < lines.length; i++ ) {
+				ctxNote.fillText( lines[i], 300, 20 + i * 40 );
+			}
+
+			W.plane( {
+				'n': 'note6',
+				'y': -0.1,
+				'z': 0.99,
+				'w': 0.6,
+				'h': 0.1,
+				'ry': 180,
+				't': cnvNote,
+			} );
+
 			W.clearColor( 'eee' );
 			W.delete( 'plane' );
 			W.delete( 'dsl' );
@@ -1814,7 +1837,6 @@ js13k.Level = class {
 
 		this.ctxDialog.clearRect( 0, 0, this.cnvDialog.width, this.cnvDialog.height );
 		this.ctxDialog.font = '600 24px ' + js13k.FONT_SANS;
-		this.ctxDialog.textAlign = 'center';
 		this.ctxDialog.textBaseline = 'top';
 		this.ctxDialog.fillStyle = '#' + color;
 

@@ -41,7 +41,7 @@ js13k.Assets = {
 		's_note5c': ['WHERE IS THE BUTTON'],
 		's_note6': [
 			'Lost note book. Is 1 the way out?',
-			'Have hope.',
+			'Hope',
 		],
 		'blue1': ['Please go. Leave me alone.'],
 		'blue2': ["Go! Don't let it find me."],
