@@ -1,4 +1,4 @@
-# js13k 2024: Floor 13
+# js13k 2024: Cursed Elevator
 
 ![Screenshot from the game.](thumb_400x250.png?raw=true)
 

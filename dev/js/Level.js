@@ -795,30 +795,9 @@ js13k.Level = class {
 					},
 				);
 			}
-			// Have (red) walk closer, next loop
+			// (red) is closer again, next loop
 			else if( floor == 13 ) {
-				const { y: startY, z: startZ } = W.next.e_red;
-				const goalY = 0.3;
-				const goalZ = -1.5;
-				const diffY = goalY - startY;
-				const diffZ = goalZ - startZ;
-
-				this.runners.push( {
-					duration: 2,
-					do: progress => {
-						W.move( {
-							'n': 'e_red',
-							'y': startY + diffY * progress,
-							'z': startZ + diffZ * progress,
-						} );
-
-						if( progress > 1 ) {
-							this.setScene( js13k.SCENE.NEXT_LOOP );
-
-							return 1;
-						}
-					},
-				} );
+				scene = js13k.SCENE.NEXT_LOOP;
 			}
 
 			return;
@@ -859,7 +838,7 @@ js13k.Level = class {
 			// A different (blue)
 			if( floor == 3 ) {
 				this.runners.push( {
-					duration: 2,
+					duration: 5,
 					do: progress => {
 						this.showDialog( js13k.Assets.texts.blue4, W.next.e_blue, '7ae', progress );
 
@@ -894,36 +873,22 @@ js13k.Level = class {
 					},
 				} );
 
+				const {
+					x: startX,
+					y: startY,
+					z: startZ
+				} = W.next.e_red;
+
 				// (red) looks towards player
 				W.move( {
 					'n': 'e_red',
 					'rx': 0,
 					'ry': 0,
 					'rz': 0,
-					'a': 700,
+					'a': 600,
 					'onAnimDone': () => {
-						const {
-							x: startX,
-							y: startY,
-							z: startZ
-						} = W.next.e_red;
-
-						// (red) moves towards player
-						this.runners.push( {
-							duration: 5,
-							do: progress => {
-								if( this.handleRedAttack( progress ) ) {
-									return 1;
-								}
-
-								W.move( {
-									'n': 'e_red',
-									'x': ( 1 - progress ) * startX,
-									'y': ( 1 - progress ) * startY,
-									'z': ( 1 - progress ) * ( startZ + 1 ) - 1,
-								} );
-							},
-						} );
+						// Wait a moment
+						setTimeout( () => this.redAttackScene( startX, startY, startZ ), 1000 );
 					},
 				} );
 			}
@@ -941,21 +906,7 @@ js13k.Level = class {
 					'z': -3,
 				} );
 
-				// (red) moves towards player
-				this.runners.push( {
-					duration: 5,
-					do: progress => {
-						if( this.handleRedAttack( progress ) ) {
-							return 1;
-						}
-
-						W.move( {
-							'n': 'e_red',
-							'y': ( 1 - progress ) * 0.5,
-							'z': ( 1 - progress ) * -2 - 1,
-						} );
-					},
-				} );
+				setTimeout( () => this.redAttackScene( 0, 0.5, -3 ), 1000 );
 			}
 		}
 		else if( loop == 6 ) {
@@ -1371,7 +1322,7 @@ js13k.Level = class {
 
 		if( loop == 1 ) {
 			if( floor == 13 ) {
-				red.z = -5;
+				red.z = -8;
 			}
 		}
 		else if( loop == 2 ) {
@@ -1379,7 +1330,7 @@ js13k.Level = class {
 				blue.z = -4;
 			}
 			else if( floor == 13 ) {
-				red.z = -3;
+				red.z = -5;
 			}
 		}
 		else if( loop == 3 ) {
@@ -1390,7 +1341,7 @@ js13k.Level = class {
 				pink.z = -3;
 			}
 			else if( floor == 13 ) {
-				red.z = -3;
+				red.z = -2;
 			}
 		}
 		else if( loop == 4 ) {
@@ -1423,6 +1374,8 @@ js13k.Level = class {
 			W.move( note );
 		}
 		else if( loop == 5 ) {
+			let btn13Z = 100;
+
 			if( floor == 3 ) {
 				blue.z = -3;
 			}
@@ -1448,17 +1401,21 @@ js13k.Level = class {
 						'ry': -30,
 					} );
 
-					red.x = 0.75;
+					red.x = 0.7;
 					red.z = -3;
 					red.ry = 30;
 				}
 			}
 			else if( floor == 8 ) {
+				btn13Z = -0.2;
+			}
+
+			if( !this.btn13PickedUp ) {
 				W.move( {
 					'n': 'btn13',
 					'x': -0.6,
 					'y': -1.2,
-					'z': -0.2,
+					'z': btn13Z,
 					'rx': -90,
 					'ry': 10,
 				} );
@@ -1466,7 +1423,7 @@ js13k.Level = class {
 					'n': 's_lbl_btn13',
 					'x': -0.6,
 					'y': -1.189,
-					'z': -0.2,
+					'z': btn13Z,
 					'rx': -90,
 					'ry': 10,
 				} );
@@ -1653,6 +1610,58 @@ js13k.Level = class {
 			W.delete( 'e_pink4' );
 			W.delete( 'e_pink7' );
 		}
+	}
+
+
+	/**
+	 *
+	 * @param {number} startX
+	 * @param {number} startY
+	 * @param {number} startZ
+	 */
+	redAttackScene( startX, startY, startZ ) {
+		let lastStep = 0;
+
+		// (red) moves towards player
+		this.runners.push( {
+			duration: 6,
+			do: progress => {
+				if( this.handleRedAttack( progress ) ) {
+					return 1;
+				}
+
+				if( progress * 8 - lastStep < 1 || progress >= 1 ) {
+					return;
+				}
+
+				lastStep = progress * 8;
+
+				// Get closer to player
+				let x = ( 1 - progress ) * startX;
+				let y = ( 1 - progress ) * startY;
+				let z = ( 1 - progress ) * ( startZ + 0.6 ) - 0.6;
+
+				// Sway left/right because of steps
+				x += Math.round( lastStep ) % 2 ? 0.07 : -0.07;
+
+				js13k.Audio.play( js13k.Audio.STEP, 0, 0.1 + lastStep * 0.1 );
+				js13k.Audio.text(
+					'*thump*', 'f00', 0.5,
+					{
+						'x': x,
+						'y': -0.5,
+						'z': z,
+					}
+				);
+
+				W.move( {
+					'n': 'e_red',
+					'x': x,
+					'y': y,
+					'z': z,
+				} );
+			},
+		} );
 	}
 
 

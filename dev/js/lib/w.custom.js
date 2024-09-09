@@ -76,6 +76,7 @@ W = {
 
 			'#version 300 es\n' +
 			'precision highp float;' +
+			'const lowp float floatMax = float(uint(-1));' +
 			// Received from the vertex shader: position, color, texture coordinates, normal (if any)
 			'in vec4 v_pos, v_col, v_uv;' +
 			// light position
@@ -83,12 +84,22 @@ W = {
 			// options [0: shininess, 1: shading enabled, 2: ambient, 3: mix]
 			'uniform vec4 o;' +
 			'uniform sampler2D sampler;' +
+			// Window size
+			'uniform uvec2 s;' +
 			// Output: final fragment color
 			'out vec4 c;' +
 
+			// xorshift64
+			'highp uint rand(highp uint seed) {' +
+				'seed = seed ^ (seed << 13u);' +
+				'seed = seed ^ (seed >> 7u);' +
+				'seed = seed ^ (seed << 17u);' +
+				'return seed;' +
+			'}' +
+
 			'void main() {' +
 				// Ambient color
-				'float ambient = o[2];' +
+				'float ambient = o.z;' +
 
 				// Lambert lighting
 				'vec3 light_dir = normalize(light.xyz - v_pos.xyz);' +
@@ -98,17 +109,32 @@ W = {
 				// Specular lighting
 				'float specular = 0.;' +
 
-				'if(o[0] > 0.) {' +
+				'if(o.x > 0.) {' +
 					'vec3 R = reflect(-light_dir, normal);' +
 					'vec3 V = normalize(-v_pos.xyz);' +
 					'float specAngle = max(dot(R, V), 0.);' +
-					'specular = light.w * pow(specAngle, o[0]) * 0.3;' +
+					'specular = light.w * pow(specAngle, o.x) * 0.3;' +
 				'}' +
 
 				// Texture and final color
-				'c = mix(texture(sampler, v_uv.xy), v_col, o[3]);' +
-				'float f = o[1] > 0. ? ambient + lambert + specular : 1.;' +
+				'c = mix(texture(sampler, v_uv.xy), v_col, o.w);' +
+				'float f = o.y > 0. ? ambient + lambert + specular : 1.;' +
 				'c = vec4(c.rgb * f, c.a);' +
+
+				// Apply dithering to reduce color banding
+				'lowp float relX = (v_pos.x + 1.0) * 0.5;' +
+				'lowp float relY = (v_pos.y + 1.0) * 0.5;' +
+				'uint pxRows = uint(ceil(relY * float(s.y)));' +
+				'highp uint index = pxRows * s.x + uint(relX * float(s.x));' +
+				'highp uint seed1 = rand(index);' +
+				'highp uint seed2 = rand(seed1);' +
+				'highp uint seed3 = rand(seed2);' +
+				'lowp vec3 rnd = vec3(0.0);' +
+				'rnd.x += float(seed1) / floatMax;' +
+				'rnd.y += float(seed2) / floatMax;' +
+				'rnd.z += float(seed3) / floatMax;' +
+				'rnd /= 255.0;' +
+				'c.xyz += rnd;' +
 			'}'
 		);
 
@@ -317,6 +343,11 @@ W = {
 			W.gl.getUniformLocation( W.program, 'pv' ),
 			false,
 			v.toFloat32Array()
+		);
+
+		W.gl.uniform2ui(
+			W.gl.getUniformLocation( W.program, 's' ),
+			W.canvas.width, W.canvas.height
 		);
 
 		// Clear canvas
