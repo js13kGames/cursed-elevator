@@ -2070,7 +2070,7 @@ js13k.Level = class {
 					'onAnimDone': () => this.blockFlicker = false,
 				} );
 			}
-			else if( W.next.light.i != this.lightIntensity ) {
+			else if( W.next['light'].i != this.lightIntensity ) {
 				W.light( { 'i': this.lightIntensity } );
 			}
 		}
