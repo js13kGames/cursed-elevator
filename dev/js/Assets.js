@@ -84,6 +84,7 @@ js13k.Assets = {
 			const [canvas, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
 			ctx.font = '600 32px ' + js13k.FONT_SANS;
 			ctx.textBaseline = 'middle';
+			ctx.fillStyle = '#444';
 			ctx.fillText( text, w / 2, h / 2 + 2 );
 
 			this.textures[key] = canvas;

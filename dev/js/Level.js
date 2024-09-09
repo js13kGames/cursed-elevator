@@ -44,7 +44,7 @@ js13k.Level = class {
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
 		this.lightIntensity = 1;
-		this.loop = 1; // TODO: set to 1
+		this.loop = 4; // TODO: set to 1
 		// this.note = null;
 		// this.scene = null;
 
@@ -767,7 +767,7 @@ js13k.Level = class {
 				} );
 			}
 			// (pink) first dialog
-			else if( floor == 7 ) {
+			else if( floor == 9 ) {
 				const y = W.next.e_pink1.y;
 
 				this.runners.push(
@@ -840,7 +840,7 @@ js13k.Level = class {
 				} );
 			}
 			// (red) among the (pink)
-			else if( floor == 7 ) {
+			else if( floor == 9 ) {
 				this.runners.push( {
 					duration: 2,
 					do: progress => {
@@ -868,7 +868,7 @@ js13k.Level = class {
 				} );
 			}
 			// (red) kills (pink), attacks player
-			else if( floor == 7 ) {
+			else if( floor == 9 ) {
 				const pos = [5, 6, 8].map( index => {
 					const key = 'e_pink' + index;
 
@@ -931,9 +931,9 @@ js13k.Level = class {
 			else if( floor == 13 ) {
 				scene = js13k.SCENE.NEXT_LOOP;
 			}
-			// A chance of (red) attacking if floor 7 has already been visited
+			// A chance of (red) attacking if floor 9 has already been visited
 			// Except for the floor where the button can be found
-			else if( floor != 8 && this.floorsVisited.includes( 7 ) && Math.random() < 0.3 ) {
+			else if( floor != 8 && this.floorsVisited.includes( 9 ) && Math.random() < 0.3 ) {
 				W.move( {
 					'n': 'e_red',
 					'x': 0,
@@ -1268,7 +1268,7 @@ js13k.Level = class {
 			return true;
 		}
 
-		if( this.loop == 4 && this.floorCurrent == 7 ) {
+		if( this.loop == 4 && this.floorCurrent == 9 ) {
 			return true;
 		}
 
@@ -1343,7 +1343,7 @@ js13k.Level = class {
 			if( floor == 3 ) {
 				blue.z = -4;
 			}
-			else if( floor == 7 ) {
+			else if( floor == 9 ) {
 				pink.z = -3;
 			}
 			else if( floor == 13 ) {
@@ -1361,10 +1361,10 @@ js13k.Level = class {
 				blue.z = -5;
 				blue.rx = -90;
 			}
-			else if( floor == 4 ) {
+			else if( floor == 6 ) {
 				note.z = -2;
 			}
-			else if( floor == 7 ) {
+			else if( floor == 9 ) {
 				pink.z = -3;
 
 				// Replace one of (pink) with (red)
@@ -1383,8 +1383,8 @@ js13k.Level = class {
 			if( floor == 3 ) {
 				blue.z = -3;
 			}
-			else if( floor == 7 ) {
-				if( !this.floorsVisited.includes( 7 ) ) {
+			else if( floor == 9 ) {
+				if( !this.floorsVisited.includes( 9 ) ) {
 					pink.z = -3;
 
 					W.move( {
@@ -1429,9 +1429,6 @@ js13k.Level = class {
 				} );
 			}
 		}
-		else if( loop == 6 ) {
-			//
-		}
 
 		W.move( red );
 		W.move( blue );
@@ -1447,13 +1444,20 @@ js13k.Level = class {
 		const enabledButtons = [
 			[0, 13],
 			[0, 3],
-			[0, 3, 7],
-			[0, 3, 4, 7],
+			[0, 3, 9],
+			[0, 3, 6, 9],
 			[0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], // Button for 13 has to be collected first
 			[1],
 		];
 
 		this.buttonsEnabled = enabledButtons[loop - 1];
+
+		for( let i = 0; i < 14; i++ ) {
+			W.move( {
+				'n': 'btn' + i,
+				'b': this.buttonsEnabled.includes( i ) ? 'ddd' : 'aaa',
+			} );
+		}
 
 		if( loop == 2 ) {
 			W.plane( {
