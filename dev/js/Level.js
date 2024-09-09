@@ -40,13 +40,11 @@ js13k.Level = class {
 		this.deaths = 0; // TODO: remove if unused
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 2; // TODO: set to 1
+		this.floorCurrent = 8; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
 		this.lightIntensity = 1;
-		this.loop = 4; // TODO: set to 1
-		// this.note = null;
-		// this.scene = null;
+		this.loop = 5; // TODO: set to 1
 
 		this._evX = 2.5;
 		this._evY = 3;
@@ -658,12 +656,14 @@ js13k.Level = class {
 		this.highlight( this._lastSelectable );
 
 		if( this._lastSelectable ) {
-			const cnvUI = js13k.Renderer.cnvUI;
-			const ctxUI = js13k.Renderer.ctxUI;
-			ctxUI.fillStyle = '#fff';
-			ctxUI.font = '20px ' + js13k.FONT_MONO;
-			ctxUI.textAlign = 'center';
-			ctxUI.fillText( '[E]/LEFT-CLICK TO SELECT', cnvUI.width / 2, cnvUI.height - 42 );
+			if( this.isButtonEnabled( this._lastSelectable.n ) ) {
+				const cnvUI = js13k.Renderer.cnvUI;
+				const ctxUI = js13k.Renderer.ctxUI;
+				ctxUI.fillStyle = '#fff';
+				ctxUI.font = '20px ' + js13k.FONT_MONO;
+				ctxUI.textAlign = 'center';
+				ctxUI.fillText( '[E]/LEFT-CLICK TO SELECT', cnvUI.width / 2, cnvUI.height - 42 );
+			}
 
 			if( js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true ) ) {
 				this.selectObject();
@@ -702,7 +702,7 @@ js13k.Level = class {
 		}
 		else if( loop == 2 ) {
 			if( !hasFloor13 ) {
-				this.buttonsEnabled.push( 13 );
+				this.enableButton( 13 );
 			}
 
 			// (blue) first dialog
@@ -739,8 +739,8 @@ js13k.Level = class {
 			}
 		}
 		else if( loop == 3 ) {
-			if( !hasFloor13 && this.hasVisitedFloors( [3, 7] ) ) {
-				this.buttonsEnabled.push( 13 );
+			if( !hasFloor13 && this.hasVisitedFloors( [3, 9] ) ) {
+				this.enableButton( 13 );
 			}
 
 			// (blue) second dialog
@@ -824,8 +824,8 @@ js13k.Level = class {
 			return;
 		}
 		else if( loop == 4 ) {
-			if( !hasFloor13 && this.hasVisitedFloors( [3, 4, 7] ) ) {
-				this.buttonsEnabled.push( 13 );
+			if( !hasFloor13 && this.hasVisitedFloors( [3, 6, 9] ) ) {
+				this.enableButton( 13 );
 			}
 
 			// (blue) dying
@@ -1047,6 +1047,20 @@ js13k.Level = class {
 
 	/**
 	 *
+	 * @param {number} num
+	 */
+	enableButton( num ) {
+		this.buttonsEnabled.push( num );
+
+		W.move( {
+			'n': 'btn' + num,
+			'b': 'ddd',
+		} );
+	}
+
+
+	/**
+	 *
 	 * @param {number} progress
 	 * @returns {boolean}
 	 */
@@ -1116,10 +1130,39 @@ js13k.Level = class {
 			this.note = o.n;
 		}
 		else if( o.n.startsWith( 'btn' ) ) {
-			if( !this.isButtonEnabled( o.n ) && this.loop == 5 && o.n == 'btn13' ) {
-				W.move( this.oBtn13 );
-				W.move( this.oLblBtn13 );
-				this.buttonsEnabled.push( 13 );
+			if( !this.isButtonEnabled( o.n ) && this.loop == 5 && o.n == 'btn13' && !this.btn13PickedUp ) {
+				this.btn13PickedUp = true;
+
+				W.move( {
+					'n': 'btn13',
+					'x': W.next.btn13.x - 0.2,
+					'y': W.next.btn13.y + 0.8,
+					'z': W.next.btn13.z + 0.7,
+					'rx': 0,
+					'ry': 0,
+					'rz': 0,
+					'a': 500,
+					'onAnimDone': () => {
+						setTimeout( () => {
+							this.oBtn13.a = 1000;
+							this.oBtn13.onAnimDone = () => this.enableButton( 13 );
+							this.oLblBtn13.a = 1000;
+
+							W.move( this.oBtn13 );
+							W.move( this.oLblBtn13 );
+						}, 200 );
+					},
+				} );
+				W.move( {
+					'n': 's_lbl_btn13',
+					'x': W.next.s_lbl_btn13.x - 0.2,
+					'y': W.next.s_lbl_btn13.y + 0.8,
+					'z': W.next.s_lbl_btn13.z + 0.72,
+					'rx': 0,
+					'ry': 0,
+					'rz': 0,
+					'a': 500,
+				} );
 
 				return;
 			}
@@ -1185,7 +1228,7 @@ js13k.Level = class {
 	 */
 	highlight( target ) {
 		if( !target || !this.isButtonEnabled( target.n ) ) {
-			if( !target || this.loop != 5 || target.n != 'btn13' ) {
+			if( !target || this.loop != 5 || target.n != 'btn13' || this.btn13PickedUp ) {
 				W.move( {
 					'n': 'hl',
 					'z': 100,
@@ -1416,7 +1459,7 @@ js13k.Level = class {
 					'x': -0.6,
 					'y': -1.2,
 					'z': -0.2,
-					'rx': 90,
+					'rx': -90,
 					'ry': 10,
 				} );
 				W.move( {
