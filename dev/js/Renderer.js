@@ -10,7 +10,7 @@ js13k.Renderer = {
 		rx: 0,
 		ry: 0,
 	},
-	cameraLocked: false, // TODO: set initially to true
+	cameraLocked: false,
 
 	/** @type {HTMLCanvasElement} */
 	cnv: null,
@@ -330,8 +330,9 @@ js13k.Renderer = {
 	 *
 	 */
 	registerEvents() {
-		let mouseLastX = null;
-		let mouseLastY = null;
+		this.mouseLastX = null;
+		this.mouseLastY = null;
+
 		const camSpeed = 0.4;
 
 		window.addEventListener( 'resize', _ev => this.resize() );
@@ -339,8 +340,8 @@ js13k.Renderer = {
 		const keys = js13k.Input.getKeysForAction( js13k.Input.ACTION.PAUSE );
 		const cbPause = () => {
 			this.togglePause();
-			mouseLastX = null;
-			mouseLastY = null;
+			this.mouseLastX = null;
+			this.mouseLastY = null;
 		};
 		keys.keyboard.forEach( key => js13k.Input.onKeyUp( key, cbPause ) );
 
@@ -357,8 +358,8 @@ js13k.Renderer = {
 				return;
 			}
 
-			mouseLastX = ev.clientX;
-			mouseLastY = ev.clientY;
+			this.mouseLastX = ev.clientX;
+			this.mouseLastY = ev.clientY;
 		} );
 
 		this.cnv.addEventListener( 'mousemove', ev => {
@@ -366,23 +367,23 @@ js13k.Renderer = {
 				return;
 			}
 
-			if( mouseLastX === null ) {
-				mouseLastX = ev.clientX;
-				mouseLastY = ev.clientY;
+			if( this.mouseLastX === null ) {
+				this.mouseLastX = ev.clientX;
+				this.mouseLastY = ev.clientY;
 
 				return;
 			}
 
-			this.camera.rx -= ( ev.clientY - mouseLastY ) * camSpeed;
-			this.camera.ry -= ( ev.clientX - mouseLastX ) * camSpeed;
+			this.camera.rx -= ( ev.clientY - this.mouseLastY ) * camSpeed;
+			this.camera.ry -= ( ev.clientX - this.mouseLastX ) * camSpeed;
 
 			this.camera.rx = Math.min( 80, Math.max( -60, this.camera.rx ) );
 			this.camera.ry = this.camera.ry % 360;
 
 			W.camera( this.camera );
 
-			mouseLastX = ev.clientX;
-			mouseLastY = ev.clientY;
+			this.mouseLastX = ev.clientX;
+			this.mouseLastY = ev.clientY;
 		} );
 
 		// Reset camera
