@@ -79,7 +79,7 @@ W = {
 			// Received from the vertex shader: position, color, texture coordinates, normal (if any)
 			'in vec4 v_pos, v_col, v_uv;' +
 			// light position
-			'uniform vec3 light;' +
+			'uniform vec4 light;' +
 			// options [0: shininess, 1: shading enabled, 2: ambient, 3: mix]
 			'uniform vec4 o;' +
 			'uniform sampler2D sampler;' +
@@ -91,9 +91,9 @@ W = {
 				'float ambient = o[2];' +
 
 				// Lambert lighting
-				'vec3 light_dir = normalize(light - v_pos.xyz);' +
+				'vec3 light_dir = normalize(light.xyz - v_pos.xyz);' +
 				'vec3 normal = normalize(cross(dFdx(v_pos.xyz), dFdy(v_pos.xyz)));' +
-				'float lambert = max(0., dot(light_dir, normal)) * 0.7;' +
+				'float lambert = light.w * max(0., dot(light_dir, normal)) * 0.7;' +
 
 				// Specular lighting
 				'float specular = 0.;' +
@@ -102,7 +102,7 @@ W = {
 					'vec3 R = reflect(-light_dir, normal);' +
 					'vec3 V = normalize(-v_pos.xyz);' +
 					'float specAngle = max(dot(R, V), 0.);' +
-					'specular = pow(specAngle, o[0]) * 0.3;' +
+					'specular = light.w * pow(specAngle, o[0]) * 0.3;' +
 				'}' +
 
 				// Texture and final color
@@ -136,7 +136,7 @@ W = {
 		W.gl.enable( 2929 /* DEPTH_TEST */ );
 
 		// When everything is loaded: set default light / camera
-		W.light( { 'y': 1 } );
+		W.light( { 'y': 1, 'i': 1, } );
 		W.camera( { 'fov': 30 } );
 
 		// Draw the scene. Ignore the first frame because the default camera will probably be overwritten by the program
@@ -361,9 +361,10 @@ W = {
 		W.gl.disable( 3042 /* BLEND */ );
 
 		// Transition the light's position and send it to the shaders
-		W.gl.uniform3f(
+		W.gl.uniform4f(
 			W.gl.getUniformLocation( W.program, 'light' ),
-			W.lerp( 'light', 'x' ), W.lerp( 'light', 'y' ), W.lerp( 'light', 'z' )
+			W.lerp( 'light', 'x' ), W.lerp( 'light', 'y' ), W.lerp( 'light', 'z' ),
+			W.lerp( 'light', 'i' )
 		);
 
 		// Set outside framework to re-use `requestAnimationFrame` callback

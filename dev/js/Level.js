@@ -40,9 +40,10 @@ js13k.Level = class {
 		this.deaths = 0; // TODO: remove if unused
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 12; // TODO: set to 1
+		this.floorCurrent = 2; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
+		this.lightIntensity = 1;
 		this.loop = 1; // TODO: set to 1
 		// this.note = null;
 		// this.scene = null;
@@ -1256,6 +1257,31 @@ js13k.Level = class {
 
 	/**
 	 *
+	 * @returns {boolean}
+	 */
+	isFlickerFloor() {
+		if( this.loop == 2 && this.floorCurrent == 13 ) {
+			return true;
+		}
+
+		if( this.loop == 3 && this.floorCurrent == 13 ) {
+			return true;
+		}
+
+		if( this.loop == 4 && this.floorCurrent == 7 ) {
+			return true;
+		}
+
+		if( this.loop == 5 ) {
+			return true;
+		}
+
+		return false;
+	}
+
+
+	/**
+	 *
 	 * @param {number} nextLoop
 	 */
 	loopNext( nextLoop ) {
@@ -1264,6 +1290,7 @@ js13k.Level = class {
 			'y': 0,
 			'z': 0,
 		} );
+		W.light( { 'i': 1 } );
 
 		this.loop = nextLoop;
 		this.floorsVisited = [];
@@ -1456,6 +1483,8 @@ js13k.Level = class {
 			this.updateLoopCounter( '𝍫' );
 		}
 		else if( loop == 4 ) {
+			this.lightIntensity = 0.9;
+
 			W.plane( {
 				'n': 's_note4',
 				'x': -0.1,
@@ -1472,6 +1501,8 @@ js13k.Level = class {
 			this.updateLoopCounter( '𝍬' );
 		}
 		else if( loop == 5 ) {
+			this.lightIntensity = 0.8;
+
 			W.plane( {
 				'n': 's_note5c',
 				'x': this._evX / 2 - 0.03,
@@ -1521,6 +1552,8 @@ js13k.Level = class {
 			this.updateLoopCounter( '𝍸' );
 		}
 		else if( loop == 6 ) {
+			this.lightIntensity = 1;
+
 			const [cnvNote, ctxNote] = js13k.Renderer.getOffscreenCanvas( 600, 100, 'note6' );
 			ctxNote.font = 'italic 32px ' + js13k.SERIF;
 			ctxNote.fillStyle = '#555';
@@ -1891,7 +1924,7 @@ js13k.Level = class {
 		if( !W.next.dialog ) {
 			[this.cnvDialog, this.ctxDialog] = js13k.Renderer.getOffscreenCanvas( 2, 2, 'dialog' );
 
-			W.billboard( {
+			W.plane( {
 				'n': 'dialog',
 				'ns': 1,
 				't': this.cnvDialog,
@@ -1914,6 +1947,7 @@ js13k.Level = class {
 
 		this.ctxDialog.clearRect( 0, 0, this.cnvDialog.width, this.cnvDialog.height );
 		this.ctxDialog.font = '600 24px ' + js13k.FONT_SANS;
+		this.ctxDialog.textAlign = 'center';
 		this.ctxDialog.textBaseline = 'top';
 		this.ctxDialog.fillStyle = '#' + color;
 
@@ -1968,6 +2002,22 @@ js13k.Level = class {
 	update( dt ) {
 		this.timer += dt;
 		this.runRunners();
+
+		// Light flickering
+		if( !this.blockFlicker ) {
+			if( this.isFlickerFloor() && Math.random() < 0.02 * dt ) {
+				this.blockFlicker = true;
+
+				W.light( {
+					'i': 0.6,
+					'a': 100,
+					'onAnimDone': () => this.blockFlicker = false,
+				} );
+			}
+			else if( W.next.light.i != this.lightIntensity ) {
+				W.light( { 'i': this.lightIntensity } );
+			}
+		}
 
 		if( this.note ) {
 			const text = js13k.Assets.texts[this.note];
