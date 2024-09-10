@@ -335,6 +335,7 @@ js13k.Renderer = {
 		this.mouseLastY = null;
 
 		const camSpeed = 0.4;
+		let isPointerLocked = false;
 
 		window.addEventListener( 'resize', _ev => this.resize() );
 
@@ -368,15 +369,21 @@ js13k.Renderer = {
 				return;
 			}
 
-			if( this.mouseLastX === null ) {
-				this.mouseLastX = ev.clientX;
-				this.mouseLastY = ev.clientY;
-
-				return;
+			if( isPointerLocked ) {
+				this.camera.rx -= ev.movementY * camSpeed;
+				this.camera.ry -= ev.movementX * camSpeed;
 			}
+			else {
+				if( this.mouseLastX === null ) {
+					this.mouseLastX = ev.clientX;
+					this.mouseLastY = ev.clientY;
 
-			this.camera.rx -= ( ev.clientY - this.mouseLastY ) * camSpeed;
-			this.camera.ry -= ( ev.clientX - this.mouseLastX ) * camSpeed;
+					return;
+				}
+
+				this.camera.rx -= ( ev.clientY - this.mouseLastY ) * camSpeed;
+				this.camera.ry -= ( ev.clientX - this.mouseLastX ) * camSpeed;
+			}
 
 			this.camera.rx = Math.min( 80, Math.max( -60, this.camera.rx ) );
 			this.camera.ry = this.camera.ry % 360;
@@ -385,6 +392,21 @@ js13k.Renderer = {
 
 			this.mouseLastX = ev.clientX;
 			this.mouseLastY = ev.clientY;
+		} );
+
+		document.addEventListener( 'pointerlockchange', () => {
+			isPointerLocked = !!document.pointerLockElement;
+		} );
+
+		// Toggle pointer lock
+		js13k.Input.onKeyUp( 'KeyP', () => {
+			if( isPointerLocked ) {
+				isPointerLocked = false;
+				document.exitPointerLock();
+			}
+			else {
+				this.cnv.requestPointerLock();
+			}
 		} );
 
 		// Reset camera

@@ -120,12 +120,12 @@ js13k.Assets = {
 		pxtex( cnvWall, 0, 0, 20, 3, 200, 300 );
 		this.textures.wall = cnvWall;
 
-		const cnvCeiling = js13k.Renderer.getOffscreenCanvas( 100, 100, 'ceil' )[0];
-		pxtex( cnvCeiling, 0, 0, 60, 3, 100, 100 );
+		const cnvCeiling = js13k.Renderer.getOffscreenCanvas( 200, 200, 'ceil' )[0];
+		pxtex( cnvCeiling, 0, 0, 60, 3, 200, 200 );
 		this.textures.ceil = cnvCeiling;
 
-		const cnvFloor = js13k.Renderer.getOffscreenCanvas( 100, 100, 'floor' )[0];
-		pxtex( cnvFloor, 0, 0, 10, 1, 100, 100 );
+		const cnvFloor = js13k.Renderer.getOffscreenCanvas( 200, 200, 'floor' )[0];
+		pxtex( cnvFloor, 0, 0, 10, 1, 200, 200 );
 		this.textures.floor = cnvFloor;
 
 		const cnvFrontSide = js13k.Renderer.getOffscreenCanvas( 40, 300, 'fs' )[0];

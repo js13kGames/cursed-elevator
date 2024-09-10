@@ -31,7 +31,7 @@ js13k.Input = {
 	buildActionKeyMap() {
 		this.ACTION_KEY_MAP = {
 			[this.ACTION.PAUSE]: {
-				keyboard: ['Escape'],
+				keyboard: ['Escape', 'Digit1'],
 			},
 			[this.ACTION.UP]: {
 				keyboard: ['ArrowUp', 'KeyW', 'KeyZ', 'KeyY'], // Z: French layout, Y: Also french layout, because Firefox behaves weird
