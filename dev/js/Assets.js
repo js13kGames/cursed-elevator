@@ -10,32 +10,31 @@ js13k.Assets = {
 	texts: {
 		's_note1': [
 			"I'm leaving this note for whoever gets lost",
-			'here as well. You are now stuck in a cursed',
-			"elevator. But if I'm not in here (and neither",
-			"my dead body), I must've made it out!",
+			'here as well. Stuck in this cursed elevator!',
 			'',
 			"Don't worry, I'm going to leave you some",
 			'tips as I figure this situation out!',
 		],
 		's_note2': [
-			"Everything went black and now it's 1 again.",
-			'My note is also gone.',
+			"Everything went black and now I'm on",
+			'floor 1 again. My note is also gone.',
 			'',
 			'There is a fellow on floor 3, seems harmless.',
 		],
 		's_note3': [
-			'Back again, last note gone again.',
+			'Back again, and last note gone again.',
 			'',
-			'Floor 9 is new.',
+			'Floor 9 is now available. Progress?',
 		],
 		's_note4': [
-			'Found a note book with torn pages. I guess',
-			'this is from that note writter. Rest in Peace.',
+			'Found a note book with torn pages. I',
+			'guess this is from that note writter.',
 			'',
+			'Rest in peace.',
 			'Lets continue the tradition.',
 			'',
 			"Here's a survival tip: You can close the doors.",
-			'Just hit the "><" button.',
+			'Wow, right? Just hit the "><" button.',
 		],
 		's_note5a': new Array( 22 ).fill( 'NO MORE REPEATS NO MORE REPEATS' ),
 		's_note5b': [
@@ -47,7 +46,6 @@ js13k.Assets = {
 			'OR CAN I HIDE BETTER IN THE DARK?',
 		],
 		's_note5c': [
-			'',
 			'WHERE IS THE BUTTON?!',
 		],
 		's_note6': [
@@ -65,7 +63,9 @@ js13k.Assets = {
 			'Join us? Safe together. Step out the elevator.',
 			'Let us huddle together.',
 		],
-		'pink2': ['Offer still stands. Always welcome.'],
+		'pink2': [
+			'Offer still stands. Always welcome.',
+		],
 	},
 
 
@@ -177,13 +177,10 @@ js13k.Assets = {
 	 * @private
 	 */
 	_createTitle() {
-		const w = 800;
-		const h = Math.round( w * 0.2 );
-
-		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, 'title' );
+		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( 800, 160, 'title' );
 		ctx.fillStyle = '#f00';
 		ctx.font = '600 72px ' + js13k.FONT_SERIF;
-		ctx.fillText( js13k.TITLE, w / 2, h / 2 );
+		ctx.fillText( js13k.TITLE, 400, 80 );
 
 		this.textures.title = cnv;
 	},
@@ -203,7 +200,7 @@ js13k.Assets = {
 		}
 
 		const w = 400;
-		const h = Math.round( w / 2 );
+		const h = w / 2;
 
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
 		ctx.fillStyle = '#' + color;
@@ -230,7 +227,7 @@ js13k.Assets = {
 		}
 
 		const w = 200;
-		const h = Math.round( w / 2 );
+		const h = w / 2;
 
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
 		ctx.fillStyle = '#f00';

@@ -39,11 +39,11 @@ js13k.Level = class {
 		this.buttonsEnabled = [];
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 12; // TODO: set to 1
+		this.floorCurrent = 8; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
 		this.lightIntensity = 1;
-		this.loop = 1; // TODO: set to 1
+		this.loop = 3; // TODO: set to 1
 
 		this._evX = 2.5;
 		this._evY = 3;
@@ -789,8 +789,12 @@ js13k.Level = class {
 			// (pink) first dialog
 			else if( floor == 9 ) {
 				const y = W.next.e_pink1.y;
+				let lastIndex = 0;
+				let lastPos = 0;
+				let lastAnim = 0;
 
 				this.runners.push(
+					// pink1 talking
 					{
 						duration: 5,
 						do: progress => {
@@ -799,6 +803,7 @@ js13k.Level = class {
 							return progress > 1;
 						},
 					},
+					// pink1 nodding
 					{
 						duration: 10,
 						do: progress => {
@@ -811,6 +816,42 @@ js13k.Level = class {
 							} );
 
 							return progress > 1 || this.elevator == js13k.STATE.MOVING;
+						},
+					},
+					// various pinks blinking
+					{
+						duration: 1,
+						do: progress => {
+							const sec = Math.round( progress * 5 );
+
+							if( lastAnim >= sec ) {
+								return;
+							}
+
+							lastAnim = sec;
+
+							if( lastIndex ) {
+								W.move( {
+									'n': 'e_pink' + lastIndex,
+									'z': lastPos,
+								} );
+							}
+
+							if( Math.random() < 0.8 ) {
+								lastIndex = 0;
+								return;
+							}
+
+							const index = sec % 10 + 2;
+							lastIndex = index;
+							lastPos = W.next['e_pink' + index].z;
+
+							W.move( {
+								'n': 'e_pink' + index,
+								'z': 100,
+							} );
+
+							return this.elevator == js13k.STATE.MOVING;
 						},
 					},
 				);
@@ -838,14 +879,56 @@ js13k.Level = class {
 			}
 			// (red) among the (pink)
 			else if( floor == 9 ) {
-				this.runners.push( {
-					duration: 2,
-					do: progress => {
-						this.showDialog( js13k.Assets.texts.pink2, W.next.e_pink1, 'f2c', progress );
+				let lastIndex = 0;
+				let lastPos = 0;
+				let lastAnim = 0;
 
-						return progress > 1;
+				this.runners.push(
+					{
+						duration: 2,
+						do: progress => {
+							this.showDialog( js13k.Assets.texts.pink2, W.next.e_pink1, 'f2c', progress );
+
+							return progress > 1;
+						},
 					},
-				} );
+					// various pinks blinking
+					{
+						duration: 1,
+						do: progress => {
+							const sec = Math.round( progress * 5 );
+
+							if( lastAnim >= sec ) {
+								return;
+							}
+
+							lastAnim = sec;
+
+							if( lastIndex ) {
+								W.move( {
+									'n': 'e_pink' + lastIndex,
+									'z': lastPos,
+								} );
+							}
+
+							if( Math.random() < 0.8 ) {
+								lastIndex = 0;
+								return;
+							}
+
+							const index = sec % 10 + 2;
+							lastIndex = index;
+							lastPos = W.next['e_pink' + index].z;
+
+							W.move( {
+								'n': 'e_pink' + index,
+								'z': 100,
+							} );
+
+							return this.elevator == js13k.STATE.MOVING;
+						},
+					},
+				);
 			}
 			// Empty, next loop
 			else if( floor == 13 ) {
@@ -2064,6 +2147,10 @@ js13k.Level = class {
 				'ns': 1,
 				't': this.cnvDialog,
 			} );
+		}
+
+		if( progress == 0 ) {
+			this._lastDialogTextPos = 0;
 		}
 
 		progress = Math.min( progress, 1 );
