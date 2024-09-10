@@ -593,11 +593,17 @@ W = {
 
 	group: t => W.setState( t, 'group' ),
 
-	move: t => setTimeout( () => { W.setState( t ) }, 1 ),
+	move: t => {
+		t = Array.isArray( t ) ? t : [t];
+		setTimeout( () => t.forEach( n => W.setState( n ) ), 1 );
+	},
 
-	delete: t => setTimeout( () => { delete W.next[t] }, 1 ),
+	delete: t => {
+		t = Array.isArray( t ) ? t : [t];
+		setTimeout( () => t.forEach( n => delete W.next[n] ), 1 );
+	},
 
-	camera: t => setTimeout( () => { W.setState( t, t.n = 'camera' ) }, 1 ),
+	camera: t => setTimeout( () => W.setState( t, t.n = 'camera' ), 1 ),
 
 	light: t => W.setState( t, t.n = 'light' ),
 };

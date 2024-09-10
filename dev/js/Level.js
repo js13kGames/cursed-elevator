@@ -84,24 +84,41 @@ js13k.Level = class {
 	 * @private
 	 */
 	_buildElevatorDisplay() {
-		const g = 'display';
 		const w = 0.5;
 		const h = 0.25;
 
-		W.group( {
-			'n': g,
-			'g': 'ev',
-			'y': this._evY / 2 - h - 0.15,
-			'z': -this._evZ / 2 + 0.06,
-		} );
+		const y = this._evY / 2 - h - 0.15;
+		const z = -this._evZ / 2 + 0.06;
 
-		// base plate
 		W.plane( {
-			'g': g,
 			'n': 'dis',
+			'y': y,
+			'z': z,
 			'w': w,
 			'h': h,
 			'b': 'f00',
+		} );
+
+		W.cube( {
+			'x': -w / 2,
+			'y': y,
+			'z': z,
+			'w': 0.05,
+			'h': h,
+			'd': 0.01,
+			'b': '766',
+			's': 30,
+		} );
+
+		W.cube( {
+			'x': w / 2,
+			'y': y,
+			'z': z,
+			'w': 0.05,
+			'h': h,
+			'd': 0.01,
+			'b': '766',
+			's': 30,
 		} );
 	}
 
@@ -864,13 +881,17 @@ js13k.Level = class {
 				this.runners.push( {
 					duration: 2,
 					do: _progress => {
+						const move = [];
+
 						pos.forEach( o => {
-							W.move( {
+							move.push( {
 								'n': o.n,
 								'x': o.x + ( Math.random() - 0.5 ) / 60,
 								'y': o.y + ( Math.random() - 0.5 ) / 100,
 							} );
 						} );
+
+						W.move( move );
 
 						return this.elevator == js13k.STATE.MOVING;
 					},
@@ -1094,8 +1115,7 @@ js13k.Level = class {
 							this.oBtn13.onAnimDone = () => this.enableButton( 13 );
 							this.oLblBtn13.a = 1000;
 
-							W.move( this.oBtn13 );
-							W.move( this.oLblBtn13 );
+							W.move( [this.oBtn13, this.oLblBtn13] );
 						}, 200 );
 					},
 				} );
@@ -1188,43 +1208,41 @@ js13k.Level = class {
 		const oGlobal = js13k.getGlobalPos( o );
 		const size = 0.005;
 
-		W.move( {
-			'n': 'hl',
-			'x': oGlobal.x,
-			'y': oGlobal.y,
-			'z': oGlobal.z + ( o.ry ? 0 : size * 2 ),
-			'rx': o.rx,
-			'ry': o.ry,
-			'rz': o.rz,
-		} );
-
-		W.move( {
-			'n': 'hl_t',
-			'y': oGlobal.h / 2,
-			'w': oGlobal.w,
-			'h': size,
-		} );
-
-		W.move( {
-			'n': 'hl_r',
-			'x': oGlobal.w / 2,
-			'h': oGlobal.h,
-			'w': size,
-		} );
-
-		W.move( {
-			'n': 'hl_b',
-			'y': -oGlobal.h / 2,
-			'w': oGlobal.w,
-			'h': size,
-		} );
-
-		W.move( {
-			'n': 'hl_l',
-			'x': -oGlobal.w / 2,
-			'h': oGlobal.h,
-			'w': size,
-		} );
+		W.move( [
+			{
+				'n': 'hl',
+				'x': oGlobal.x,
+				'y': oGlobal.y,
+				'z': oGlobal.z + ( o.ry ? 0 : size * 2 ),
+				'rx': o.rx,
+				'ry': o.ry,
+				'rz': o.rz,
+			},
+			{
+				'n': 'hl_t',
+				'y': oGlobal.h / 2,
+				'w': oGlobal.w,
+				'h': size,
+			},
+			{
+				'n': 'hl_r',
+				'x': oGlobal.w / 2,
+				'h': oGlobal.h,
+				'w': size,
+			},
+			{
+				'n': 'hl_b',
+				'y': -oGlobal.h / 2,
+				'w': oGlobal.w,
+				'h': size,
+			},
+			{
+				'n': 'hl_l',
+				'x': -oGlobal.w / 2,
+				'h': oGlobal.h,
+				'w': size,
+			}
+		] );
 	}
 
 
@@ -1302,6 +1320,7 @@ js13k.Level = class {
 	 */
 	prepareFloor( floor ) {
 		const loop = this.loop;
+		const move = [];
 
 		const red = {
 			'n': 'e_red',
@@ -1320,7 +1339,7 @@ js13k.Level = class {
 		};
 
 		if( W.next.dialog ) {
-			W.move( {
+			move.push( {
 				'n': 'dialog',
 				'z': 100,
 			} );
@@ -1376,14 +1395,13 @@ js13k.Level = class {
 				red.x = W.next.e_pink7.x;
 				red.y = W.next.e_pink7.y;
 				red.z = -3;
-				W.move( {
+				move.push( {
 					'n': 'e_pink7',
 					'z': 100,
 				} );
 			}
 
-			W.move( note );
-			W.move( bloodFloor6 );
+			move.push( note, bloodFloor6 );
 		}
 		else if( loop == 5 ) {
 			let btn13Z = 100;
@@ -1395,18 +1413,18 @@ js13k.Level = class {
 				if( !this.floorsVisited.includes( 9 ) ) {
 					pink.z = -3;
 
-					W.move( {
+					move.push( {
 						'n': 'e_pink5',
 						'x': -0.5,
 						'y': 0.2,
 						'ry': -30,
 					} );
-					W.move( {
+					move.push( {
 						'n': 'e_pink6',
 						'y': -0.1,
 						'ry': -30,
 					} );
-					W.move( {
+					move.push( {
 						'n': 'e_pink8',
 						'x': -1.1,
 						'y': 0.1,
@@ -1428,7 +1446,7 @@ js13k.Level = class {
 			}
 
 			if( !this.btn13PickedUp ) {
-				W.move( {
+				move.push( {
 					'n': 'btn13',
 					'x': -0.7,
 					'y': -1.2,
@@ -1436,7 +1454,7 @@ js13k.Level = class {
 					'rx': -90,
 					'ry': 10,
 				} );
-				W.move( {
+				move.push( {
 					'n': 's_lbl_btn13',
 					'x': -0.7,
 					'y': -1.189,
@@ -1452,9 +1470,11 @@ js13k.Level = class {
 			}
 		}
 
-		W.move( red );
-		W.move( blue );
-		W.move( pink );
+		move.push( red );
+		move.push( blue );
+		move.push( pink );
+
+		W.move( move );
 	}
 
 
@@ -1463,6 +1483,9 @@ js13k.Level = class {
 	 * @param {number} loop
 	 */
 	prepareLoop( loop ) {
+		const move = [];
+		const del = [];
+
 		const enabledButtons = [
 			[0, 13],
 			[0, 3],
@@ -1475,7 +1498,7 @@ js13k.Level = class {
 		this.buttonsEnabled = enabledButtons[loop - 1];
 
 		for( let i = 0; i < 14; i++ ) {
-			W.move( {
+			move.push( {
 				'n': 'btn' + i,
 				'b': this.buttonsEnabled.includes( i ) ? 'ddd' : 'aaa',
 			} );
@@ -1585,22 +1608,23 @@ js13k.Level = class {
 				't': js13k.Assets.getNote( 's_note5a', '#13d' ),
 			} );
 
-			W.move( {
-				'n': 'btn13',
-				'z': 100,
-			} );
-			W.move( {
-				'n': 's_lbl_btn13',
-				'z': 100,
-			} );
-
-			W.move( {
-				'n': 'e_blue',
-				'x': -1,
-				'y': -0.4,
-				'ry': -45,
-				't': js13k.Assets.getEyesTexture( '•  •', '7ae' ),
-			} );
+			move.push(
+				{
+					'n': 'btn13',
+					'z': 100,
+				},
+				{
+					'n': 's_lbl_btn13',
+					'z': 100,
+				},
+				{
+					'n': 'e_blue',
+					'x': -1,
+					'y': -0.4,
+					'ry': -45,
+					't': js13k.Assets.getEyesTexture( '•  •', '7ae' ),
+				},
+			);
 		}
 		else if( loop == 6 ) {
 			this.lightIntensity = 1;
@@ -1626,42 +1650,42 @@ js13k.Level = class {
 				't': cnvNote,
 			} );
 
-			W.delete( 'plane' );
-			W.delete( 'dsl' );
-			W.delete( 'dsr' );
+			del.push( 'plane', 'dsl', 'dsr' );
 		}
 
 		if( loop > 1 ) {
-			W.move( {
+			move.push( {
 				'n': 'loops',
 				'z': 0.0251,
 			} );
 
-			W.delete( 's_note1' );
-			W.delete( 'title' ); // TODO: remove
+			del.push( 's_note1', 'title' ); // TODO: remove "title"
 		}
 		if( loop > 2 ) {
-			W.delete( 's_note2' );
+			del.push( 's_note2' );
 		}
 		if( loop > 3 ) {
-			W.delete( 's_note3' );
+			del.push( 's_note3' );
 		}
 		if( loop > 4 ) {
-			W.delete( 's_note4' );
-			W.delete( 'e_pink1' );
-			W.delete( 'e_pink2' );
-			W.delete( 'e_pink3' );
-			W.delete( 'e_pink4' );
-			W.delete( 'e_pink7' );
-			W.delete( 'e_pink9' );
-			W.delete( 'e_pink10' );
-			W.delete( 'e_pink11' );
+			del.push(
+				's_note4',
+				'e_pink1',
+				'e_pink2',
+				'e_pink3',
+				'e_pink4',
+				'e_pink7',
+				'e_pink9',
+				'e_pink10',
+				'e_pink11',
+			);
 		}
 		if( loop > 5 ) {
-			W.delete( 's_note5a' );
-			W.delete( 's_note5b' );
-			W.delete( 's_note5c' );
+			del.push( 's_note5a', 's_note5b', 's_note5c' );
 		}
+
+		W.move( move );
+		W.delete( del );
 	}
 
 
@@ -1810,7 +1834,7 @@ js13k.Level = class {
 
 					W.camera( camStart );
 					js13k.Audio.play( js13k.Audio.DING );
-					js13k.Audio.text( '*ding*', 'ff0', 3, W.next.display );
+					js13k.Audio.text( '*ding*', 'ff0', 3, W.next.dis );
 
 					this.floorCurrent = this.floorNext;
 					this.floorsVisited.push( this.floorCurrent );
@@ -2006,6 +2030,7 @@ js13k.Level = class {
 
 						js13k.Renderer.ctxUI.font = '96px ' + js13k.FONT_SERIF;
 						js13k.Renderer.ctxUI.textAlign = 'center';
+						js13k.Renderer.ctxUI.textBaseline = 'middle';
 						js13k.Renderer.ctxUI.fillStyle = `rgba(110,110,110,${alpha})`;
 						js13k.Renderer.ctxUI.fillText( 'ESCAPED', w / 2, h / 2 );
 					};

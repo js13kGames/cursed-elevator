@@ -237,8 +237,9 @@ js13k.Assets = {
 		ctx.fillRect( 0, 0, w, h );
 		ctx.fillStyle = '#fff';
 		ctx.font = '64px ' + js13k.FONT_SANS;
+		ctx.textAlign = 'left';
 		ctx.textBaseline = 'middle';
-		ctx.fillText( String( text ), w / 2, h / 2 + 6 );
+		ctx.fillText( String( text ).padStart( 2, '0' ), w / 2 - 36, h / 2 + 6 );
 
 		this.textures[key] = cnv;
 

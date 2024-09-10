@@ -120,6 +120,7 @@ js13k.Renderer = {
 		this.ctxUI.fillStyle = '#fff';
 		this.ctxUI.font = '96px ' + js13k.FONT_SERIF;
 		this.ctxUI.textAlign = 'center';
+		this.ctxUI.textBaseline = 'middle';
 		this.ctxUI.fillText( 'PAUSED', this.cnvUI.width / 2, this.cnvUI.height / 2 );
 	},
 
