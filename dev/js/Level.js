@@ -39,11 +39,11 @@ js13k.Level = class {
 		this.buttonsEnabled = [];
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 1; // TODO: set to 1
+		this.floorCurrent = 12; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
 		this.lightIntensity = 1;
-		this.loop = 5; // TODO: set to 1
+		this.loop = 1; // TODO: set to 1
 
 		this._evX = 2.5;
 		this._evY = 3;
@@ -74,8 +74,8 @@ js13k.Level = class {
 		this.prepareLoop( this.loop );
 		this.prepareFloor( this.floorCurrent );
 
-		// document.getElementById( 'b' ).remove(); // TODO: remove
-		this.setScene( js13k.SCENE.TITLE ); // TODO: uncomment
+		document.getElementById( 'b' ).remove(); // TODO: remove
+		// this.setScene( js13k.SCENE.TITLE ); // TODO: uncomment
 	}
 
 
@@ -656,13 +656,16 @@ js13k.Level = class {
 		this.highlight( this._lastSelectable );
 
 		if( this._lastSelectable ) {
-			if( this.isButtonEnabled( this._lastSelectable.n ) ) {
+			if(
+				this.isButtonEnabled( this._lastSelectable.n ) ||
+				( this._lastSelectable.n == 'btn13' && !this.btn13PickedUp )
+			) {
 				const cnvUI = js13k.Renderer.cnvUI;
 				const ctxUI = js13k.Renderer.ctxUI;
 				ctxUI.fillStyle = '#fff7';
 				ctxUI.font = '18px ' + js13k.FONT_SANS;
 				ctxUI.textAlign = 'center';
-				ctxUI.fillText( '[E] / LEFT-CLICK TO SELECT', cnvUI.width / 2, cnvUI.height - 42 );
+				ctxUI.fillText( '[E] / LEFT-CLICK TO INTERACT', cnvUI.width / 2, cnvUI.height - 42 );
 			}
 
 			if( js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true ) ) {
@@ -836,9 +839,11 @@ js13k.Level = class {
 			// A different (blue)
 			if( floor == 3 ) {
 				this.runners.push( {
-					duration: 6,
+					duration: 7,
 					do: progress => {
-						this.showDialog( js13k.Assets.texts.blue4, W.next.e_blue, '7ae', progress );
+						if( progress > 0.1 ) {
+							this.showDialog( js13k.Assets.texts.blue4, W.next.e_blue, '7ae', progress - 0.1 );
+						}
 
 						return progress > 1;
 					},
@@ -896,15 +901,8 @@ js13k.Level = class {
 			}
 			// A chance of (red) attacking if floor 9 has already been visited
 			// Except for the floor where the button can be found
-			else if( floor != 8 && this.floorsVisited.includes( 9 ) && Math.random() < 0.3 ) {
-				W.move( {
-					'n': 'e_red',
-					'x': 0,
-					'y': 0.5,
-					'z': -3,
-				} );
-
-				setTimeout( () => this.redAttackScene( 0, 0.5, -3 ), 1000 );
+			else if( floor != 8 && this.floorsVisited.includes( 9 ) && W.next.e_red.z == -3 ) {
+				setTimeout( () => this.redAttackScene( 0, 0.5, -3 ), 100 );
 			}
 		}
 		else if( loop == 6 ) {
@@ -1054,7 +1052,7 @@ js13k.Level = class {
 		}
 
 		// Didn't close doors on time
-		if( progress > 1 || this.doors != js13k.STATE.CLOSING ) {
+		if( progress > 1 && this.doors != js13k.STATE.CLOSING ) {
 			this.setScene( js13k.SCENE.REPEAT_LOOP );
 
 			return true;
@@ -1251,6 +1249,10 @@ js13k.Level = class {
 	 * @returns {boolean}
 	 */
 	isFlickerFloor() {
+		if( this.scene == js13k.SCENE.TITLE ) {
+			return true;
+		}
+
 		if( this.loop == 2 && this.floorCurrent == 13 ) {
 			return true;
 		}
@@ -1316,6 +1318,13 @@ js13k.Level = class {
 			'n': 'e_pink_all',
 			'z': 100,
 		};
+
+		if( W.next.dialog ) {
+			W.move( {
+				'n': 'dialog',
+				'z': 100,
+			} );
+		}
 
 		if( loop == 1 ) {
 			if( floor == 13 ) {
@@ -1411,6 +1420,11 @@ js13k.Level = class {
 			}
 			else if( floor == 8 ) {
 				btn13Z = -0.22;
+			}
+			else if( this.floorsVisited.includes( 9 ) && Math.random() < 0.4 ) {
+				red.x = 0;
+				red.y = 0.5;
+				red.z = -3;
 			}
 
 			if( !this.btn13PickedUp ) {
@@ -1593,7 +1607,7 @@ js13k.Level = class {
 
 			const [cnvNote, ctxNote] = js13k.Renderer.getOffscreenCanvas( 600, 100, 'note6' );
 			ctxNote.font = 'italic 32px ' + js13k.SERIF;
-			ctxNote.fillStyle = '#555';
+			ctxNote.fillStyle = '#444';
 			ctxNote.textBaseline = 'top';
 
 			const lines = js13k.Assets.texts.s_note6;
@@ -1624,7 +1638,7 @@ js13k.Level = class {
 			} );
 
 			W.delete( 's_note1' );
-			// W.delete( 'title' ); // TODO: remove
+			W.delete( 'title' ); // TODO: remove
 		}
 		if( loop > 2 ) {
 			W.delete( 's_note2' );
@@ -1642,6 +1656,11 @@ js13k.Level = class {
 			W.delete( 'e_pink9' );
 			W.delete( 'e_pink10' );
 			W.delete( 'e_pink11' );
+		}
+		if( loop > 5 ) {
+			W.delete( 's_note5a' );
+			W.delete( 's_note5b' );
+			W.delete( 's_note5c' );
 		}
 	}
 
@@ -1672,7 +1691,7 @@ js13k.Level = class {
 				// Get closer to player
 				let x = ( 1 - progress ) * startX;
 				let y = ( 1 - progress ) * startY;
-				let z = ( 1 - progress ) * ( startZ + 0.6 ) - 0.6;
+				let z = ( 1 - progress ) * ( startZ + 0.7 ) - 0.7;
 
 				// Sway left/right because of steps
 				x += Math.round( lastStep ) % 2 ? 0.07 : -0.07;
@@ -1775,11 +1794,11 @@ js13k.Level = class {
 				'z': W.next.camera.z,
 			};
 
-			// Moving from 1 floor to the next takes 1.2 seconds.
+			// Moving from 1 floor to the next takes 1.1 seconds.
 			// Multiple floors take longer. But the greater the
 			// floor difference, the faster it is.
 			const floorDiff = this.floorNext - this.floorCurrent;
-			runner.duration = Math.min( 5, 1.2 * Math.abs( floorDiff ) );
+			runner.duration = Math.min( 4.5, 1.1 * Math.abs( floorDiff ) );
 
 			js13k.Audio.play( js13k.Audio.ELEVATOR, runner.duration );
 
@@ -1867,11 +1886,12 @@ js13k.Level = class {
 			runner.do = progress => {
 				js13k.Renderer.cameraLocked = true;
 
+				const w = js13k.Renderer.cnvUI.width;
+				const h = js13k.Renderer.cnvUI.height;
+				js13k.Renderer.ctxUI.fillStyle = '#a00';
+				js13k.Renderer.ctxUI.fillRect( 0, 0, w, h );
 				js13k.Renderer.ctxUI.fillStyle = `rgba(0,0,0,${Math.min( 1, progress )})`;
-				js13k.Renderer.ctxUI.fillRect(
-					0, 0,
-					js13k.Renderer.cnvUI.width, js13k.Renderer.cnvUI.height
-				);
+				js13k.Renderer.ctxUI.fillRect( 0, 0, w, h );
 
 				if( progress > 1 ) {
 					this.loopNext( loop );

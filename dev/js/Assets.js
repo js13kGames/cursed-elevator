@@ -121,7 +121,7 @@ js13k.Assets = {
 		this.textures.wall = cnvWall;
 
 		const cnvCeiling = js13k.Renderer.getOffscreenCanvas( 100, 100, 'ceil' )[0];
-		pxtex( cnvCeiling, 0, 0, 100, 3, 100, 100 );
+		pxtex( cnvCeiling, 0, 0, 60, 3, 100, 100 );
 		this.textures.ceil = cnvCeiling;
 
 		const cnvFloor = js13k.Renderer.getOffscreenCanvas( 100, 100, 'floor' )[0];
