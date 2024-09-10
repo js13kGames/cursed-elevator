@@ -48,7 +48,7 @@ js13k.Renderer = {
 			let d = 0;
 
 			// "plane" has no depth, but a default value of 1
-			if( o.type != 'plane' && o.type != 'billboard' ) {
+			if( o.type != 'plane' ) {
 				d = o.d;
 			}
 

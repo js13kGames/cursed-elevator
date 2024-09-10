@@ -30,22 +30,24 @@ js13k.Assets = {
 		],
 		's_note4': [
 			'Found a note book with torn pages. I guess',
-			'this is from that note writter.',
+			'this is from that note writter. Rest in Peace.',
 			'',
-			'Lets continue the tradition...',
+			'Lets continue the tradition.',
 			'',
 			"Here's a survival tip: You can close the doors.",
-			'Hit the "><" button or go to another floor.',
+			'Just hit the "><" button.',
 		],
 		's_note5a': new Array( 22 ).fill( 'NO MORE REPEATS NO MORE REPEATS' ),
 		's_note5b': [
-			'SICK OF PAIN SICK OF PAIN SICK OF',
-			'PAIN SO SICK OF PAIN! NO MORE BITING!',
+			'SICK OF PAIN! NO MORE BITING!',
+			'',
 			'STAY HERE, KEEP THE DOORS CLOSED',
-			'FOREVER? OR CAN I HIDE BETTER IN',
-			'THE DARK?',
+			'FOREVER?',
+			'',
+			'OR CAN I HIDE BETTER IN THE DARK?',
 		],
 		's_note5c': [
+			'',
 			'WHERE IS THE BUTTON?!',
 		],
 		's_note6': [
@@ -133,6 +135,40 @@ js13k.Assets = {
 		const cnvFrontTop = js13k.Renderer.getOffscreenCanvas( 200, 75, 'ft' )[0];
 		pxtex( cnvFrontTop, 0, 0, 20, 3, 200, 75 );
 		this.textures.ft = cnvFrontTop;
+
+		const [cnvBlood, ctxBlood] = js13k.Renderer.getOffscreenCanvas( 100, 100, 'blood' );
+		ctxBlood.fillStyle = '#500';
+		ctxBlood.beginPath();
+		ctxBlood.ellipse( 50, 50, 50, 50, 0, 0, Math.PI * 2 );
+		ctxBlood.fill();
+		this.textures.blood = cnvBlood;
+
+		for( let i = 2; i < 7; i++ ) {
+			const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( 100, 50, 'counter' + i );
+			ctx.fillStyle = '#999';
+			ctx.strokeStyle = '#999';
+			ctx.fillRect( 10, 0, 5, 50 );
+			ctx.fillRect( 20, 0, 5, 50 );
+
+			if( i > 2 ) {
+				ctx.fillRect( 30, 0, 5, 50 );
+			}
+			if( i > 3 ) {
+				ctx.fillRect( 40, 0, 5, 50 );
+			}
+			if( i > 4 ) {
+				ctx.lineWidth = 5;
+				ctx.beginPath();
+				ctx.moveTo( 0, 30 );
+				ctx.lineTo( 55, 20 );
+				ctx.stroke();
+			}
+			if( i > 5 ) {
+				ctx.fillRect( 60, 0, 5, 50 );
+			}
+
+			this.textures[cnv.id] = cnv;
+		}
 	},
 
 
@@ -141,12 +177,12 @@ js13k.Assets = {
 	 * @private
 	 */
 	_createTitle() {
-		const w = 600;
+		const w = 800;
 		const h = Math.round( w * 0.2 );
 
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, 'title' );
 		ctx.fillStyle = '#f00';
-		ctx.font = '600 64px ' + js13k.FONT_SERIF;
+		ctx.font = '600 72px ' + js13k.FONT_SERIF;
 		ctx.fillText( js13k.TITLE, w / 2, h / 2 );
 
 		this.textures.title = cnv;
@@ -166,12 +202,12 @@ js13k.Assets = {
 			return this.textures[key];
 		}
 
-		const w = 200;
+		const w = 400;
 		const h = Math.round( w / 2 );
 
 		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
 		ctx.fillStyle = '#' + color;
-		ctx.font = '36px ' + js13k.FONT_SANS;
+		ctx.font = '64px ' + js13k.FONT_SANS;
 		ctx.textBaseline = 'middle';
 		ctx.fillText( String( text ), w / 2, h / 2 + 6 );
 

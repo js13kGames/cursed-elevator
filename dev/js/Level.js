@@ -37,14 +37,13 @@ js13k.Level = class {
 		this.timer = 0;
 
 		this.buttonsEnabled = [];
-		this.deaths = 0; // TODO: remove if unused
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 13; // TODO: set to 1
+		this.floorCurrent = 1; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
 		this.lightIntensity = 1;
-		this.loop = 6; // TODO: set to 1
+		this.loop = 5; // TODO: set to 1
 
 		this._evX = 2.5;
 		this._evY = 3;
@@ -54,9 +53,10 @@ js13k.Level = class {
 
 		W.plane( {
 			'n': 'title',
-			'z': -200, // TODO: -2
-			'w': 1,
-			'h': 0.2,
+			'x': 0.02,
+			'z': -2,
+			'w': 1.5,
+			'h': 0.3,
 			'b': 'f00',
 			't': js13k.Assets.textures.title,
 		} );
@@ -74,8 +74,8 @@ js13k.Level = class {
 		this.prepareLoop( this.loop );
 		this.prepareFloor( this.floorCurrent );
 
-		document.getElementById( 'b' ).remove(); // TODO: remove
-		// this.setScene( js13k.SCENE.TITLE ); // TODO: uncomment
+		// document.getElementById( 'b' ).remove(); // TODO: remove
+		this.setScene( js13k.SCENE.TITLE ); // TODO: uncomment
 	}
 
 
@@ -136,19 +136,6 @@ js13k.Level = class {
 			's': 20,
 		} );
 
-		// Fake shadow
-		W.plane( {
-			'n': 'dsl',
-			'g': 'dlg',
-			'b': '0008',
-			'y': -this._evY / 2 - 0.001,
-			'z': -0.27,
-			'h': 100,
-			'rx': -90,
-			'ry': 20,
-			'ns': 1,
-		} );
-
 
 		// Right door area
 
@@ -166,19 +153,6 @@ js13k.Level = class {
 			'd': doorDepth,
 			'b': 'aaa',
 			's': 20,
-		} );
-
-		// Fake shadow
-		W.plane( {
-			'n': 'dsr',
-			'g': 'drg',
-			'b': '0008',
-			'y': -this._evY / 2 - 0.001,
-			'z': -0.27,
-			'h': 100,
-			'rx': -90,
-			'ry': -20,
-			'ns': 1,
 		} );
 
 		this._noteWidth = doorWidth / 4;
@@ -288,7 +262,7 @@ js13k.Level = class {
 			'rx': -90,
 			'b': '555',
 			't': js13k.Assets.textures.floor,
-			'mix': 0.5,
+			'mix': 0.3,
 		} );
 		// ceiling
 		W.plane( {
@@ -507,6 +481,27 @@ js13k.Level = class {
 			'rx': -10,
 			't': js13k.Assets.getEyesTexture( '•  •', 'f2c' ),
 		} );
+		W.plane( {
+			'g': 'e_pink_all',
+			'n': 'e_pink10',
+			'x': 1.1,
+			'y': 0.4,
+			'w': 0.5,
+			'h': 0.5 / 4,
+			'ry': 20,
+			'rx': -10,
+			't': js13k.Assets.getEyesTexture( '•  •', 'f2c' ),
+		} );
+		W.plane( {
+			'g': 'e_pink_all',
+			'n': 'e_pink11',
+			'x': 0.2,
+			'y': -0.05,
+			'w': 0.4,
+			'h': 0.4 / 4,
+			'ry': 20,
+			't': js13k.Assets.getEyesTexture( '•   •', 'f2c' ),
+		} );
 
 		W.plane( {
 			'g': 'e_pink_all',
@@ -542,6 +537,16 @@ js13k.Level = class {
 			'n': 'e_pink8',
 			'x': -1.4,
 			'y': -0.2,
+			'w': 0.5,
+			'h': 0.5 / 4,
+			'ry': -20,
+			't': js13k.Assets.getEyesTexture( '•   •', 'f2c' ),
+		} );
+		W.plane( {
+			'g': 'e_pink_all',
+			'n': 'e_pink9',
+			'x': -1.3,
+			'y': 0.6,
 			'w': 0.5,
 			'h': 0.5 / 4,
 			'ry': -20,
@@ -599,24 +604,18 @@ js13k.Level = class {
 	 * @private
 	 */
 	_buildLoopCounter() {
-		[this.cnvLoopCounter, this.ctxLoopCounter] = js13k.Renderer.getOffscreenCanvas( 120, 60, 'loops' );
-		this.ctxLoopCounter.font = '48px ' + js13k.FONT_SERIF;
-		this.ctxLoopCounter.fillStyle = '#999';
-		this.ctxLoopCounter.textAlign = 'left';
-		this.ctxLoopCounter.textBaseline = 'top';
-		this.ctxLoopCounter.fillText( '𝍪', 0, 0 );
-
 		// Starts appearing on 2nd loop
 		W.plane( {
 			'n': 'loops',
 			'g': 'drg',
-			'x': -0.47,
+			'x': -0.48,
 			'y': 0.4,
 			'z': 100,
-			'w': 0.2,
-			'h': 0.1,
+			'w': 0.18,
+			'h': 0.09,
 			'rz': 5,
-			't': this.cnvLoopCounter,
+			't': js13k.Assets.textures.counter2,
+			'mix': 0,
 		} );
 	}
 
@@ -800,8 +799,6 @@ js13k.Level = class {
 			else if( floor == 13 ) {
 				scene = js13k.SCENE.NEXT_LOOP;
 			}
-
-			return;
 		}
 		else if( loop == 4 ) {
 			if( !hasFloor13 && this.hasVisitedFloors( [3, 6, 9] ) ) {
@@ -1057,8 +1054,7 @@ js13k.Level = class {
 		}
 
 		// Didn't close doors on time
-		if( progress > 1 ) {
-			this.deaths++;
+		if( progress > 1 || this.doors != js13k.STATE.CLOSING ) {
 			this.setScene( js13k.SCENE.REPEAT_LOOP );
 
 			return true;
@@ -1331,7 +1327,7 @@ js13k.Level = class {
 				blue.z = -4;
 			}
 			else if( floor == 13 ) {
-				red.z = -5;
+				red.z = -4.5;
 			}
 		}
 		else if( loop == 3 ) {
@@ -1342,12 +1338,16 @@ js13k.Level = class {
 				pink.z = -3;
 			}
 			else if( floor == 13 ) {
-				red.z = -2;
+				red.z = -2.5;
 			}
 		}
 		else if( loop == 4 ) {
 			const note = {
 				'n': 's_note4',
+				'z': 100,
+			};
+			const bloodFloor6 = {
+				'n': 'blood6',
 				'z': 100,
 			};
 
@@ -1357,7 +1357,8 @@ js13k.Level = class {
 				blue.rx = -90;
 			}
 			else if( floor == 6 ) {
-				note.z = -2;
+				note.z = -1.8;
+				bloodFloor6.z = -2.5;
 			}
 			else if( floor == 9 ) {
 				pink.z = -3;
@@ -1373,6 +1374,7 @@ js13k.Level = class {
 			}
 
 			W.move( note );
+			W.move( bloodFloor6 );
 		}
 		else if( loop == 5 ) {
 			let btn13Z = 100;
@@ -1408,13 +1410,13 @@ js13k.Level = class {
 				}
 			}
 			else if( floor == 8 ) {
-				btn13Z = -0.2;
+				btn13Z = -0.22;
 			}
 
 			if( !this.btn13PickedUp ) {
 				W.move( {
 					'n': 'btn13',
-					'x': -0.6,
+					'x': -0.7,
 					'y': -1.2,
 					'z': btn13Z,
 					'rx': -90,
@@ -1422,7 +1424,7 @@ js13k.Level = class {
 				} );
 				W.move( {
 					'n': 's_lbl_btn13',
-					'x': -0.6,
+					'x': -0.7,
 					'y': -1.189,
 					'z': btn13Z,
 					'rx': -90,
@@ -1465,6 +1467,8 @@ js13k.Level = class {
 			} );
 		}
 
+		this.updateLoopCounter( loop );
+
 		if( loop == 2 ) {
 			W.plane( {
 				'n': 's_note2',
@@ -1489,8 +1493,6 @@ js13k.Level = class {
 				'ry': -90,
 				't': js13k.Assets.getNote( 's_note3' ),
 			} );
-
-			this.updateLoopCounter( '𝍫' );
 		}
 		else if( loop == 4 ) {
 			this.lightIntensity = 0.9;
@@ -1508,9 +1510,36 @@ js13k.Level = class {
 				'mix': 0.7,
 			} );
 
-			this.updateLoopCounter( '𝍬' );
+			W.group( {
+				'n': 'blood6',
+				'y': -this._evY / 2,
+				'rx': -90,
+			} );
+			W.plane( {
+				'g': 'blood6',
+				'w': 0.2,
+				'h': 0.2,
+				't': js13k.Assets.textures.blood,
+			} );
+			W.plane( {
+				'g': 'blood6',
+				'x': -0.1,
+				'y': 0.3,
+				'w': 0.1,
+				'h': 0.1,
+				't': js13k.Assets.textures.blood,
+			} );
+			W.plane( {
+				'g': 'blood6',
+				'x': 0.01,
+				'y': 0.5,
+				'w': 0.08,
+				'h': 0.08,
+				't': js13k.Assets.textures.blood,
+			} );
 		}
 		else if( loop == 5 ) {
+			this.btn13PickedUp = false;
 			this.lightIntensity = 0.8;
 
 			W.plane( {
@@ -1558,8 +1587,6 @@ js13k.Level = class {
 				'ry': -45,
 				't': js13k.Assets.getEyesTexture( '•  •', '7ae' ),
 			} );
-
-			this.updateLoopCounter( '𝍸' );
 		}
 		else if( loop == 6 ) {
 			this.lightIntensity = 1;
@@ -1588,8 +1615,6 @@ js13k.Level = class {
 			W.delete( 'plane' );
 			W.delete( 'dsl' );
 			W.delete( 'dsr' );
-
-			this.updateLoopCounter( '𝍸𝍩' );
 		}
 
 		if( loop > 1 ) {
@@ -1599,7 +1624,7 @@ js13k.Level = class {
 			} );
 
 			W.delete( 's_note1' );
-			W.delete( 'title' ); // TODO: remove, only for developing
+			// W.delete( 'title' ); // TODO: remove
 		}
 		if( loop > 2 ) {
 			W.delete( 's_note2' );
@@ -1614,6 +1639,9 @@ js13k.Level = class {
 			W.delete( 'e_pink3' );
 			W.delete( 'e_pink4' );
 			W.delete( 'e_pink7' );
+			W.delete( 'e_pink9' );
+			W.delete( 'e_pink10' );
+			W.delete( 'e_pink11' );
 		}
 	}
 
@@ -1916,7 +1944,7 @@ js13k.Level = class {
 				document.body.classList.remove( 'p' );
 
 				this.runners.push( {
-					duration: 1,
+					duration: 0.7,
 					do: progress => {
 						if( progress > 1 ) {
 							setTimeout( () => this.setScene( js13k.SCENE.INTRO ), 1 );
@@ -2098,21 +2126,13 @@ js13k.Level = class {
 
 	/**
 	 *
-	 * @param {string} text
+	 * @param {number} counter
 	 */
-	updateLoopCounter( text ) {
-		this.ctxLoopCounter.clearRect(
-			0, 0,
-			this.cnvLoopCounter.width, this.cnvLoopCounter.height
-		);
-		this.ctxLoopCounter.fillText( text, 0, 0 );
-
-		W.gl.deleteTexture( W.textures.loops );
-		delete W.textures.loops;
-
+	updateLoopCounter( counter ) {
 		W.move( {
 			'n': 'loops',
-			't': this.cnvLoopCounter,
+			't': js13k.Assets.textures['counter' + counter],
+			'mix': 0,
 		} );
 	}
 

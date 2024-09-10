@@ -53,11 +53,8 @@ W = {
 			'out vec4 v_pos, v_col, v_uv;' +
 
 			'void main() {' +
-				'gl_Position = pv * (' +
-					'v_pos = bb.z > 0.' +
-					'? m[3] + eye * pos * bb' +
-					': m * pos' +
-				');' +
+				'v_pos = m * pos;' +
+				'gl_Position = pv * v_pos;' +
 				'v_col = col;' +
 				'v_uv = uv;' +
 			'}'
@@ -380,7 +377,7 @@ W = {
 		// Render all transparent objects
 		for( i of transparent ) {
 			// Disable depth buffer write if it's a plane or a billboard to allow transparent objects to intersect planes more easily
-			if( ['plane', 'billboard'].includes( i.type ) ) {
+			if( i.type == 'plane' ) {
 				W.gl.depthMask( 0 );
 			}
 
@@ -501,7 +498,7 @@ W = {
 				object.h,
 
 				// is a billboard
-				object.type == 'billboard',
+				0,
 
 				// Reserved
 				0
@@ -674,7 +671,7 @@ W.smooth = ( state, dict = {}, vertices = [], iterate, iterateSwitch, i, j, A, B
 // All models are optional, you can remove the ones you don't need to save space
 // Custom models can be added from the same model, an OBJ importer is available on https://xem.github.io/WebGLFramework/obj2js/
 
-// Plane / billboard
+// Plane
 //
 //  v1------v0
 //  |       |
@@ -692,7 +689,6 @@ W.add( 'plane', {
 		1, 1,     0, 0,    1, 0
 	],
 } );
-W.add( 'billboard', W.models.plane );
 
 // Cube
 //
