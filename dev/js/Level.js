@@ -294,6 +294,55 @@ js13k.Level = class {
 			'mix': 0.4,
 		} );
 
+		// floor ledges
+		W.cube( {
+			'g': g,
+			'x': -this._evX / 2,
+			'y': -this._evY / 2,
+			'w': 0.02,
+			'h': 0.1,
+			'd': this._evZ,
+			'b': '777',
+		} );
+		W.cube( {
+			'g': g,
+			'x': this._evX / 2,
+			'y': -this._evY / 2,
+			'w': 0.02,
+			'h': 0.1,
+			'd': this._evZ,
+			'b': '777',
+		} );
+		W.cube( {
+			'g': g,
+			'y': -this._evY / 2,
+			'z': this._evZ / 2,
+			'w': this._evX,
+			'h': 0.1,
+			'd': 0.02,
+			'b': '777',
+		} );
+		W.cube( {
+			'g': g,
+			'x': -this._evX / 2,
+			'y': -this._evY / 2,
+			'z': -this._evZ / 2 + 0.05,
+			'w': this._evX / 2.25,
+			'h': 0.1,
+			'd': 0.02,
+			'b': '777',
+		} );
+		W.cube( {
+			'g': g,
+			'x': this._evX / 2,
+			'y': -this._evY / 2,
+			'z': -this._evZ / 2 + 0.05,
+			'w': this._evX / 2.25,
+			'h': 0.1,
+			'd': 0.02,
+			'b': '777',
+		} );
+
 		// wall: left
 		W.plane( {
 			'g': g,
