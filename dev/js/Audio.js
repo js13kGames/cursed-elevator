@@ -34,7 +34,7 @@ js13k.Audio = {
 		sound = sound.slice();
 
 		if( duration ) {
-			sound[5] = duration - ( sound[3] || 0 ) - ( sound[5] || 0 ) - ( sound[18] || 0 );
+			sound[4] = duration - ( sound[3] || 0 ) - ( sound[5] || 0 ) - ( sound[18] || 0 );
 		}
 
 		if( volume ) {

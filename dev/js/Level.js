@@ -40,11 +40,11 @@ js13k.Level = class {
 		this.deaths = 0; // TODO: remove if unused
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 8; // TODO: set to 1
+		this.floorCurrent = 13; // TODO: set to 1
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
 		this.lightIntensity = 1;
-		this.loop = 5; // TODO: set to 1
+		this.loop = 6; // TODO: set to 1
 
 		this._evX = 2.5;
 		this._evY = 3;
@@ -114,7 +114,7 @@ js13k.Level = class {
 		const doorWidth = this._evX / 2;
 		const doorDepth = 0.05;
 
-		this._rightDoorClosed = doorWidth / 2 + 0.0025; // leave a very small gap open
+		this._rightDoorClosed = doorWidth / 2 + 0.002; // leave a very small gap open
 		this._rightDoorOpen = this._rightDoorClosed + this._evX / 2 - this._evX / 3.5;
 
 
@@ -192,7 +192,7 @@ js13k.Level = class {
 			'w': this._noteWidth,
 			'h': this._noteWidth * 1.414, // 297 / 210 ~= 1.414
 			'rz': -10,
-			't': js13k.Assets.textures.paper,
+			't': js13k.Assets.getNote( 's_note1' ),
 		} );
 	}
 
@@ -286,7 +286,7 @@ js13k.Level = class {
 			'w': this._evX,
 			'h': this._evZ,
 			'rx': -90,
-			'b': '333',
+			'b': '555',
 			't': js13k.Assets.textures.floor,
 			'mix': 0.5,
 		} );
@@ -297,9 +297,10 @@ js13k.Level = class {
 			'w': this._evX,
 			'h': this._evZ,
 			'rx': 90,
-			'b': 'bbb',
+			'b': '999',
 			't': js13k.Assets.textures.ceil,
-			'mix': 0.5,
+			's': 30,
+			'mix': 0.4,
 		} );
 
 		// wall: left
@@ -312,7 +313,7 @@ js13k.Level = class {
 			'b': '999',
 			't': js13k.Assets.textures.wall,
 			's': 30,
-			'mix': 0.5,
+			'mix': 0.4,
 		} );
 		// wall: right
 		W.plane( {
@@ -324,7 +325,7 @@ js13k.Level = class {
 			'b': '999',
 			't': js13k.Assets.textures.wall,
 			's': 30,
-			'mix': 0.5,
+			'mix': 0.4,
 		} );
 		// wall: back
 		W.plane( {
@@ -336,7 +337,7 @@ js13k.Level = class {
 			'b': '999',
 			't': js13k.Assets.textures.wall,
 			's': 30,
-			'mix': 0.5,
+			'mix': 0.4,
 		} );
 
 		// railing: left
@@ -387,7 +388,7 @@ js13k.Level = class {
 			'b': '999',
 			't': js13k.Assets.textures.fs,
 			's': 30,
-			'mix': 0.5,
+			'mix': 0.4,
 		} );
 		// front, right side
 		W.cube( {
@@ -401,7 +402,7 @@ js13k.Level = class {
 			'b': '999',
 			't': js13k.Assets.textures.fs,
 			's': 30,
-			'mix': 0.5,
+			'mix': 0.4,
 		} );
 		// front, top
 		W.cube( {
@@ -414,7 +415,7 @@ js13k.Level = class {
 			'b': '999',
 			't': js13k.Assets.textures.ft,
 			's': 30,
-			'mix': 0.5,
+			'mix': 0.4,
 		} );
 	}
 
@@ -659,10 +660,10 @@ js13k.Level = class {
 			if( this.isButtonEnabled( this._lastSelectable.n ) ) {
 				const cnvUI = js13k.Renderer.cnvUI;
 				const ctxUI = js13k.Renderer.ctxUI;
-				ctxUI.fillStyle = '#fff';
-				ctxUI.font = '20px ' + js13k.FONT_MONO;
+				ctxUI.fillStyle = '#fff7';
+				ctxUI.font = '18px ' + js13k.FONT_SANS;
 				ctxUI.textAlign = 'center';
-				ctxUI.fillText( '[E]/LEFT-CLICK TO SELECT', cnvUI.width / 2, cnvUI.height - 42 );
+				ctxUI.fillText( '[E] / LEFT-CLICK TO SELECT', cnvUI.width / 2, cnvUI.height - 42 );
 			}
 
 			if( js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true ) ) {
@@ -838,7 +839,7 @@ js13k.Level = class {
 			// A different (blue)
 			if( floor == 3 ) {
 				this.runners.push( {
-					duration: 5,
+					duration: 6,
 					do: progress => {
 						this.showDialog( js13k.Assets.texts.blue4, W.next.e_blue, '7ae', progress );
 
@@ -1429,6 +1430,11 @@ js13k.Level = class {
 				} );
 			}
 		}
+		else if( loop == 6 ) {
+			if( floor == 1 ) {
+				W.clearColor( 'eee' );
+			}
+		}
 
 		W.move( red );
 		W.move( blue );
@@ -1469,7 +1475,7 @@ js13k.Level = class {
 				'w': this._noteWidth,
 				'h': this._noteWidth * 1.414,
 				'rz': 20,
-				't': js13k.Assets.textures.paper,
+				't': js13k.Assets.getNote( 's_note2' ),
 			} );
 		}
 		else if( loop == 3 ) {
@@ -1481,7 +1487,7 @@ js13k.Level = class {
 				'w': this._noteWidth,
 				'h': this._noteWidth * 1.414,
 				'ry': -90,
-				't': js13k.Assets.textures.paper,
+				't': js13k.Assets.getNote( 's_note3' ),
 			} );
 
 			this.updateLoopCounter( '𝍫' );
@@ -1497,7 +1503,7 @@ js13k.Level = class {
 				'h': this._noteWidth * 1.414,
 				'rx': -90,
 				'ry': 5,
-				't': js13k.Assets.textures.paper,
+				't': js13k.Assets.getNote( 's_note4', '#13d' ),
 				'b': '000',
 				'mix': 0.7,
 			} );
@@ -1515,7 +1521,7 @@ js13k.Level = class {
 				'w': this._noteWidth,
 				'h': this._noteWidth * 1.414,
 				'ry': -90,
-				't': js13k.Assets.textures.paper,
+				't': js13k.Assets.getNote( 's_note5c', '#13d' ),
 			} );
 			W.plane( {
 				'n': 's_note5b',
@@ -1525,7 +1531,7 @@ js13k.Level = class {
 				'w': this._noteWidth,
 				'h': this._noteWidth * 1.414,
 				'ry': -90,
-				't': js13k.Assets.textures.paper,
+				't': js13k.Assets.getNote( 's_note5b', '#13d' ),
 			} );
 			W.plane( {
 				'n': 's_note5a',
@@ -1533,7 +1539,7 @@ js13k.Level = class {
 				'w': this._noteWidth,
 				'h': this._noteWidth * 1.414,
 				'ry': 90,
-				't': js13k.Assets.textures.paper,
+				't': js13k.Assets.getNote( 's_note5a', '#13d' ),
 			} );
 
 			W.move( {
@@ -1579,7 +1585,6 @@ js13k.Level = class {
 				't': cnvNote,
 			} );
 
-			W.clearColor( 'eee' );
 			W.delete( 'plane' );
 			W.delete( 'dsl' );
 			W.delete( 'dsr' );
@@ -1706,6 +1711,7 @@ js13k.Level = class {
 		W.move( {
 			'n': 'dis',
 			't': js13k.Assets.getDisplayTexture( text ),
+			's': 30,
 			'mix': 0.25,
 		} );
 	}

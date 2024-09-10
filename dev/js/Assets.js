@@ -25,7 +25,8 @@ js13k.Assets = {
 		],
 		's_note3': [
 			'Back again, last note gone again.',
-			'Floor 7 is new.',
+			'',
+			'Floor 9 is new.',
 		],
 		's_note4': [
 			'Found a note book with torn pages. I guess',
@@ -36,7 +37,7 @@ js13k.Assets = {
 			"Here's a survival tip: You can close the doors.",
 			'Hit the "><" button or go to another floor.',
 		],
-		's_note5a': new Array( 24 ).fill( 'NO MORE REPEATS NO MORE REPEATS' ),
+		's_note5a': new Array( 22 ).fill( 'NO MORE REPEATS NO MORE REPEATS' ),
 		's_note5b': [
 			'SICK OF PAIN SICK OF PAIN SICK OF',
 			'PAIN SO SICK OF PAIN! NO MORE BITING!',
@@ -199,7 +200,7 @@ js13k.Assets = {
 		ctx.fillStyle = '#f00';
 		ctx.fillRect( 0, 0, w, h );
 		ctx.fillStyle = '#fff';
-		ctx.font = '600 64px ' + js13k.FONT_MONO;
+		ctx.font = '64px ' + js13k.FONT_SANS;
 		ctx.textBaseline = 'middle';
 		ctx.fillText( String( text ), w / 2, h / 2 + 6 );
 
@@ -230,6 +231,42 @@ js13k.Assets = {
 		ctx.font = '600 42px ' + js13k.FONT_MONO;
 		ctx.textBaseline = 'middle';
 		ctx.fillText( String( text ), w / 2, h / 2 );
+
+		this.textures[key] = cnv;
+
+		return cnv;
+	},
+
+
+	/**
+	 *
+	 * @param {string}  textId
+	 * @param {string?} color
+	 * @returns {HTMLCanvasElement}
+	 */
+	getNote( textId, color ) {
+		const key = 'note:' + textId;
+
+		if( this.textures[key] ) {
+			return this.textures[key];
+		}
+
+		const lines = this.texts[textId];
+		const w = 200;
+		const h = w * 1.414;
+
+		const [cnv, ctx] = js13k.Renderer.getOffscreenCanvas( w, h, key );
+
+		ctx.drawImage( this.textures.paper, 0, 0, w, h );
+
+		ctx.fillStyle = color || '#000';
+		ctx.font = '9px ' + js13k.FONT_SANS;
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'top';
+
+		for( let i = 0; i < lines.length; i++ ) {
+			ctx.fillText( lines[i], 10, 10 + i * 12 );
+		}
 
 		this.textures[key] = cnv;
 

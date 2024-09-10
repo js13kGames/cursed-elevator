@@ -106,7 +106,7 @@ js13k.Renderer = {
 		this.ctxUI.textBaseline = 'top';
 
 		for( let i = 0; i < lines.length; i++ ) {
-			this.ctxUI.fillText( lines[i], x + 20, y + 20 + i * 29 );
+			this.ctxUI.fillText( lines[i], x + 20, y + 20 + i * 32 );
 		}
 	},
 
