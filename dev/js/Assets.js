@@ -27,14 +27,14 @@ js13k.Assets = {
 			'Floor 9 is now available. Progress?',
 		],
 		's_note4': [
-			'Found a note book with torn pages. I',
-			'guess this is from that note writter.',
+			'Found a note book with torn pages. I guess',
+			'this is from that note writter.',
 			'',
 			'Rest in peace.',
 			'Lets continue the tradition.',
 			'',
 			"Here's a survival tip: You can close the doors.",
-			'Wow, right? Just hit the "><" button.',
+			'Just hit the "><" button.',
 		],
 		's_note5a': new Array( 22 ).fill( 'NO MORE REPEATS NO MORE REPEATS' ),
 		's_note5b': [
@@ -49,7 +49,8 @@ js13k.Assets = {
 			'WHERE IS THE BUTTON?!',
 		],
 		's_note6': [
-			'Lost note book. Is 1 the way out?',
+			'Lost my note book',
+			'Is 01 finally the way out?',
 			'Hope',
 		],
 		'blue1': ['Please go. Leave me alone.'],

@@ -39,11 +39,11 @@ js13k.Level = class {
 		this.buttonsEnabled = [];
 		this.doors = js13k.STATE.OPEN;
 		this.elevator = js13k.STATE.IDLE;
-		this.floorCurrent = 8; // TODO: set to 1
+		this.floorCurrent = 1;
 		this.floorNext = this.floorCurrent;
 		this.floorsVisited = [];
 		this.lightIntensity = 1;
-		this.loop = 3; // TODO: set to 1
+		this.loop = 1;
 
 		this._evX = 2.5;
 		this._evY = 3;
@@ -74,8 +74,7 @@ js13k.Level = class {
 		this.prepareLoop( this.loop );
 		this.prepareFloor( this.floorCurrent );
 
-		document.getElementById( 'b' ).remove(); // TODO: remove
-		// this.setScene( js13k.SCENE.TITLE ); // TODO: uncomment
+		this.setScene( js13k.SCENE.TITLE );
 	}
 
 
@@ -250,6 +249,7 @@ js13k.Level = class {
 
 			if( i == 13 ) {
 				this.oBtn13 = JSON.parse( JSON.stringify( W.next[n] ) );
+				this.oBtn13.b = 'aaa';
 				this.oLblBtn13 = JSON.parse( JSON.stringify( W.next['s_lbl_' + n] ) );
 				this.oLblBtn13.t = t;
 			}
@@ -825,11 +825,6 @@ js13k.Level = class {
 					duration: 2,
 					do: progress => {
 						this.showDialog( js13k.Assets.texts.blue2, pos, '77f', progress );
-						W.move( {
-							'n': 'e_blue',
-							'x': pos.x + ( Math.random() - 0.5 ) / 60,
-							'y': pos.y + ( Math.random() - 0.5 ) / 100,
-						} );
 
 						return this.elevator == js13k.STATE.MOVING;
 					},
@@ -985,21 +980,98 @@ js13k.Level = class {
 			}
 		}
 		else if( loop == 5 ) {
+			if( !hasFloor13 && this.hasVisitedFloors( [3, 9] ) ) {
+				this.enableButton( 13 );
+			}
+
 			// A different (blue)
 			if( floor == 3 ) {
 				this.runners.push( {
 					duration: 7,
 					do: progress => {
 						if( progress > 0.1 ) {
-							this.showDialog( js13k.Assets.texts.blue4, W.next.e_blue, '7ae', progress - 0.1 );
+							this.showDialog( js13k.Assets.texts.blue4, W.next.e_blue, '59b', progress - 0.1 );
 						}
 
-						return progress > 1;
+						return progress > 1.1;
 					},
 				} );
 			}
 			// (red) kills (pink), attacks player
 			else if( floor == 9 ) {
+				// Only attack once on this floor
+				if( W.next.e_red.z == -3 ) {
+					const {
+						x: startX,
+						y: startY,
+						z: startZ
+					} = W.next.e_red;
+
+					// (red) looks towards player
+					W.move( {
+						'n': 'e_red',
+						'rx': 0,
+						'ry': 0,
+						'rz': 0,
+						'a': 600,
+						'onAnimDone': () => {
+							// Wait a moment
+							setTimeout( () => this.redAttackScene( startX, startY, startZ ), 1000 );
+						},
+					} );
+				}
+			}
+			// Empty, next loop
+			else if( floor == 13 ) {
+				scene = js13k.SCENE.NEXT_LOOP;
+			}
+			// A chance of (red) attacking if floor 9 has already been visited
+			// Except for the floor where the button can be found
+			else if( this.floorsVisited.includes( 9 ) && W.next.e_red.z == -3 ) {
+				setTimeout( () => this.redAttackScene( 0, 0.5, -3 ), 100 );
+			}
+		}
+		else if( loop == 6 ) {
+			// Ending
+			if( floor == 1 ) {
+				scene = js13k.SCENE.OUTRO;
+			}
+		}
+
+		this.setScene( scene );
+	}
+
+
+	/**
+	 *
+	 * @param {number} floor
+	 */
+	doFloorActionPreDoor( floor ) {
+		if( this.loop == 3 ) {
+			if( floor == 3 ) {
+				const pos = {
+					x: W.next.e_blue.x,
+					y: W.next.e_blue.y,
+					z: W.next.e_blue.z,
+					h: W.next.e_blue.h,
+				};
+
+				this.runners.push( {
+					duration: 2,
+					do: _progress => {
+						W.move( {
+							'n': 'e_blue',
+							'x': pos.x + ( Math.random() - 0.5 ) / 60,
+							'y': pos.y + ( Math.random() - 0.5 ) / 100,
+						} );
+
+						return this.floorCurrent != 3;
+					},
+				} );
+			}
+		}
+		else if( this.loop == 5 ) {
+			if( floor == 9 ) {
 				const pos = [5, 6, 8].map( index => {
 					const key = 'e_pink' + index;
 
@@ -1025,47 +1097,11 @@ js13k.Level = class {
 
 						W.move( move );
 
-						return this.elevator == js13k.STATE.MOVING;
-					},
-				} );
-
-				const {
-					x: startX,
-					y: startY,
-					z: startZ
-				} = W.next.e_red;
-
-				// (red) looks towards player
-				W.move( {
-					'n': 'e_red',
-					'rx': 0,
-					'ry': 0,
-					'rz': 0,
-					'a': 600,
-					'onAnimDone': () => {
-						// Wait a moment
-						setTimeout( () => this.redAttackScene( startX, startY, startZ ), 1000 );
+						return this.floorCurrent != 9;
 					},
 				} );
 			}
-			// Empty, next loop
-			else if( floor == 13 ) {
-				scene = js13k.SCENE.NEXT_LOOP;
-			}
-			// A chance of (red) attacking if floor 9 has already been visited
-			// Except for the floor where the button can be found
-			else if( floor != 8 && this.floorsVisited.includes( 9 ) && W.next.e_red.z == -3 ) {
-				setTimeout( () => this.redAttackScene( 0, 0.5, -3 ), 100 );
-			}
 		}
-		else if( loop == 6 ) {
-			// Ending
-			if( floor == 1 ) {
-				scene = js13k.SCENE.OUTRO;
-			}
-		}
-
-		this.setScene( scene );
 	}
 
 
@@ -1244,7 +1280,11 @@ js13k.Level = class {
 					'onAnimDone': () => {
 						setTimeout( () => {
 							this.oBtn13.a = 1000;
-							this.oBtn13.onAnimDone = () => this.enableButton( 13 );
+							this.oBtn13.onAnimDone = () => {
+								if( this.hasVisitedFloors( [3, 9] ) ) {
+									this.enableButton( 13 );
+								}
+							},
 							this.oLblBtn13.a = 1000;
 
 							W.move( [this.oBtn13, this.oLblBtn13] );
@@ -1435,8 +1475,16 @@ js13k.Level = class {
 		} );
 		W.light( { 'i': 1 } );
 
+		if( this.loop != nextLoop ) {
+			this.floorsVisited = [];
+		}
+		else if( this.loop == 5 ) {
+			// In loop 5, on a repeat, only have to revisit floor 9.
+			// (And technically floor 8 to pick up btn13 again.)
+			this.floorsVisited = this.floorsVisited.filter( f => f != 9 );
+		}
+
 		this.loop = nextLoop;
-		this.floorsVisited = [];
 		this.floorCurrent = this.loop == 6 ? 13 : 1;
 		this.floorNext = this.floorCurrent;
 		this.setDisplay( this.floorCurrent );
@@ -1476,6 +1524,8 @@ js13k.Level = class {
 				'z': 100,
 			} );
 		}
+
+		this._lastDialogTextPos = 0;
 
 		if( loop == 1 ) {
 			if( floor == 13 ) {
@@ -1542,27 +1592,27 @@ js13k.Level = class {
 				blue.z = -3;
 			}
 			else if( floor == 9 ) {
+				pink.z = -3;
+
+				move.push( {
+					'n': 'e_pink5',
+					'x': -0.5,
+					'y': 0.2,
+					'ry': -30,
+				} );
+				move.push( {
+					'n': 'e_pink6',
+					'y': -0.1,
+					'ry': -30,
+				} );
+				move.push( {
+					'n': 'e_pink8',
+					'x': -1.1,
+					'y': 0.1,
+					'ry': -30,
+				} );
+
 				if( !this.floorsVisited.includes( 9 ) ) {
-					pink.z = -3;
-
-					move.push( {
-						'n': 'e_pink5',
-						'x': -0.5,
-						'y': 0.2,
-						'ry': -30,
-					} );
-					move.push( {
-						'n': 'e_pink6',
-						'y': -0.1,
-						'ry': -30,
-					} );
-					move.push( {
-						'n': 'e_pink8',
-						'x': -1.1,
-						'y': 0.1,
-						'ry': -30,
-					} );
-
 					red.x = 0.7;
 					red.z = -3;
 					red.ry = 30;
@@ -1571,7 +1621,8 @@ js13k.Level = class {
 			else if( floor == 8 ) {
 				btn13Z = -0.22;
 			}
-			else if( this.floorsVisited.includes( 9 ) && Math.random() < 0.4 ) {
+
+			if( ![3, 9, 13].includes( floor ) && this.floorsVisited.includes( 9 ) && Math.random() < 0.4 ) {
 				red.x = 0;
 				red.y = 0.5;
 				red.z = -3;
@@ -1623,7 +1674,7 @@ js13k.Level = class {
 			[0, 3],
 			[0, 3, 9],
 			[0, 3, 6, 9],
-			[0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], // Button for 13 has to be collected first
+			[0, 3, 4, 7, 8, 9, 10, 12], // Button for 13 has to be collected first
 			[1],
 		];
 
@@ -1674,7 +1725,7 @@ js13k.Level = class {
 				'h': this._noteWidth * 1.414,
 				'rx': -90,
 				'ry': 5,
-				't': js13k.Assets.getNote( 's_note4', '#13d' ),
+				't': js13k.Assets.getNote( 's_note4', '#169' ),
 				'b': '000',
 				'mix': 0.7,
 			} );
@@ -1719,7 +1770,7 @@ js13k.Level = class {
 				'w': this._noteWidth,
 				'h': this._noteWidth * 1.414,
 				'ry': -90,
-				't': js13k.Assets.getNote( 's_note5c', '#13d' ),
+				't': js13k.Assets.getNote( 's_note5c', '#169' ),
 			} );
 			W.plane( {
 				'n': 's_note5b',
@@ -1729,7 +1780,7 @@ js13k.Level = class {
 				'w': this._noteWidth,
 				'h': this._noteWidth * 1.414,
 				'ry': -90,
-				't': js13k.Assets.getNote( 's_note5b', '#13d' ),
+				't': js13k.Assets.getNote( 's_note5b', '#169' ),
 			} );
 			W.plane( {
 				'n': 's_note5a',
@@ -1737,7 +1788,7 @@ js13k.Level = class {
 				'w': this._noteWidth,
 				'h': this._noteWidth * 1.414,
 				'ry': 90,
-				't': js13k.Assets.getNote( 's_note5a', '#13d' ),
+				't': js13k.Assets.getNote( 's_note5a', '#169' ),
 			} );
 
 			move.push(
@@ -1754,14 +1805,14 @@ js13k.Level = class {
 					'x': -1,
 					'y': -0.4,
 					'ry': -45,
-					't': js13k.Assets.getEyesTexture( '•  •', '7ae' ),
+					't': js13k.Assets.getEyesTexture( '•  •', '59b' ),
 				},
 			);
 		}
 		else if( loop == 6 ) {
 			this.lightIntensity = 1;
 
-			const [cnvNote, ctxNote] = js13k.Renderer.getOffscreenCanvas( 600, 100, 'note6' );
+			const [cnvNote, ctxNote] = js13k.Renderer.getOffscreenCanvas( 600, 200, 'note6' );
 			ctxNote.font = 'italic 32px ' + js13k.SERIF;
 			ctxNote.fillStyle = '#444';
 			ctxNote.textBaseline = 'top';
@@ -1777,7 +1828,7 @@ js13k.Level = class {
 				'y': -0.1,
 				'z': 0.99,
 				'w': 0.6,
-				'h': 0.1,
+				'h': 0.2,
 				'ry': 180,
 				't': cnvNote,
 			} );
@@ -1791,7 +1842,7 @@ js13k.Level = class {
 				'z': 0.0251,
 			} );
 
-			del.push( 's_note1', 'title' ); // TODO: remove "title"
+			del.push( 's_note1' );
 		}
 		if( loop > 2 ) {
 			del.push( 's_note2' );
@@ -1970,6 +2021,7 @@ js13k.Level = class {
 
 					this.floorCurrent = this.floorNext;
 					this.floorsVisited.push( this.floorCurrent );
+					setTimeout( () => this.doFloorActionPreDoor( this.floorCurrent ), 1 );
 
 					this.doorsOpen( () => {
 						this.elevator = js13k.STATE.IDLE;
@@ -2028,7 +2080,7 @@ js13k.Level = class {
 							W.camera( { 'z': z } );
 							W.move( {
 								'n': 'e_red',
-								'z': redStartZ + z * 4,
+								'z': redStartZ + z,
 							} );
 						},
 					} );
@@ -2164,7 +2216,7 @@ js13k.Level = class {
 						js13k.Renderer.ctxUI.textAlign = 'center';
 						js13k.Renderer.ctxUI.textBaseline = 'middle';
 						js13k.Renderer.ctxUI.fillStyle = `rgba(110,110,110,${alpha})`;
-						js13k.Renderer.ctxUI.fillText( 'ESCAPED', w / 2, h / 2 );
+						js13k.Renderer.ctxUI.fillText( 'OUT', w / 2, h / 2 );
 					};
 
 					this.runners.push( runner );
@@ -2198,10 +2250,6 @@ js13k.Level = class {
 			} );
 		}
 
-		if( progress == 0 ) {
-			this._lastDialogTextPos = 0;
-		}
-
 		progress = Math.min( progress, 1 );
 
 		let total = 0;
@@ -2223,6 +2271,7 @@ js13k.Level = class {
 		this.ctxDialog.fillStyle = '#' + color;
 
 		const textPos = Math.round( progress * total );
+
 		let shown = 0;
 		let linesDiff = lines.length;
 		let lastChar = '';
@@ -2259,7 +2308,7 @@ js13k.Level = class {
 		if( ( this._lastDialogTextPos || 0 ) < textPos ) {
 			this._lastDialogTextPos = textPos;
 
-			if( lastChar != ' ' ) {
+			if( lastChar != ' ' && lastChar != '.' ) {
 				js13k.Audio.play( js13k.Audio.TALKING );
 			}
 		}
@@ -2292,7 +2341,7 @@ js13k.Level = class {
 
 		if( this.note ) {
 			const text = js13k.Assets.texts[this.note];
-			const color = ['s_note4', 's_note5a', 's_note5b', 's_note5c'].includes( this.note ) && '#13d';
+			const color = ['s_note4', 's_note5a', 's_note5b', 's_note5c'].includes( this.note ) && '#169';
 			js13k.Renderer.drawNote( text, color );
 
 			if( js13k.Input.isPressed( js13k.Input.ACTION.INTERACT, true ) ) {

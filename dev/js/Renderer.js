@@ -485,11 +485,11 @@ js13k.Renderer = {
 			this.ctxUI.clearRect( 0, 0, this.cnvUI.width, this.cnvUI.height );
 			this.ctxUI.imageSmoothingEnabled = false;
 
-			// Draw FPS info
-			this.ctxUI.fillStyle = '#fff';
-			this.ctxUI.font = '11px monospace';
-			this.ctxUI.textAlign = 'left';
-			this.ctxUI.fillText( ~~( js13k.TARGET_FPS / dt ) + ' FPS', 10, 20 );
+			// // Draw FPS info
+			// this.ctxUI.fillStyle = '#fff';
+			// this.ctxUI.font = '11px monospace';
+			// this.ctxUI.textAlign = 'left';
+			// this.ctxUI.fillText( ~~( js13k.TARGET_FPS / dt ) + ' FPS', 10, 20 );
 
 			if( this.isPaused ) {
 				this.drawPause();
