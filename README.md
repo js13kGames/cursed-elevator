@@ -1,6 +1,6 @@
 # js13k 2024: Cursed Elevator
 
-![Screenshot from the game.](thumb_400x250.png?raw=true)
+![Screenshot from the game.](cover_800x500.png?raw=true)
 
 Entry for the [js13k competition of 2024](https://2024.js13kgames.com/).  
 Theme: **Triskaidekaphobia** *(fear of the number 13)*
@@ -8,7 +8,7 @@ Theme: **Triskaidekaphobia** *(fear of the number 13)*
 
 ## Description
 
-...
+An interactive story about getting on a cursed elevator. But it seems you are not the first this happened to. Get to floor 13 … as often as you have to.
 
 
 ## Controls
