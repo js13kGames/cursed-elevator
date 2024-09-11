@@ -28,7 +28,7 @@ js13k.Assets = {
 		],
 		's_note4': [
 			'Found a note book with torn pages. I guess',
-			'this is from that note writter.',
+			'this is from that note writer.',
 			'',
 			'Rest in peace.',
 			'Lets continue the tradition.',
