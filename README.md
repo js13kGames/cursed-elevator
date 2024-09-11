@@ -8,7 +8,9 @@ Theme: **Triskaidekaphobia** *(fear of the number 13)*
 
 ## Description
 
-An interactive story about getting on a cursed elevator. But it seems you are not the first this happened to. Get to floor 13 … as often as you have to.
+An interactive story about getting on a cursed elevator.  
+But it seems you are not the first this happened to.  
+Get to floor 13 … as often as you have to.
 
 
 ## Controls
